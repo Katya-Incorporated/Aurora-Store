@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,14 +26,12 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.util.Log
 import com.aurora.extensions.isMAndAbove
+import com.aurora.store.AuroraApp
 import com.aurora.store.data.model.NetworkStatus
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 
-@OptIn(DelicateCoroutinesApi::class)
 class NetworkProvider(context: Context) {
 
     private val TAG = NetworkProvider::class.java.simpleName
@@ -45,7 +43,7 @@ class NetworkProvider(context: Context) {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     init {
-        networkStatus.launchIn(GlobalScope)
+        networkStatus.launchIn(AuroraApp.scope)
 
         // Monitor network
         connectivityManager.registerNetworkCallback(getNetworkRequest(),

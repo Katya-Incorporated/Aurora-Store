@@ -1,9 +1,29 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.epoxy.views.app
 
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.RelativeLayout
+import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.view.isVisible
 import coil.load
@@ -14,10 +34,10 @@ import com.airbnb.epoxy.ModelView
 import com.airbnb.epoxy.OnViewRecycled
 import com.aurora.extensions.invisible
 import com.aurora.extensions.px
-import com.aurora.extensions.show
+import com.aurora.gplayapi.data.models.App
 import com.aurora.store.R
-import com.aurora.store.State
-import com.aurora.store.data.model.UpdateFile
+import com.aurora.store.data.model.DownloadStatus
+import com.aurora.store.data.room.download.Download
 import com.aurora.store.databinding.ViewAppUpdateBinding
 import com.aurora.store.util.CommonUtil
 import com.aurora.store.view.epoxy.views.BaseView
@@ -52,76 +72,64 @@ class AppUpdateView : RelativeLayout {
     }
 
     @ModelProp
-    fun updateFile(updateFile: UpdateFile?) {
-        if (updateFile != null) {
-
-            /*Inflate App details*/
-            with(updateFile.app) {
-                B.txtLine1.text = displayName
-                B.imgIcon.load(iconArtwork.url) {
-                    placeholder(R.drawable.bg_placeholder)
-                    transformations(RoundedCornersTransformation(8.px.toFloat()))
-                }
-
-                B.txtLine2.text = developerName
-                B.txtLine3.text = ("${CommonUtil.addSiPrefix(size)}  •  $updatedOn")
-                B.txtLine4.text = ("$versionName (${versionCode})")
-                B.txtChangelog.text = if (changes.isNotEmpty())
-                    HtmlCompat.fromHtml(
-                        changes,
-                        HtmlCompat.FROM_HTML_OPTION_USE_CSS_COLORS
-                    )
-                else
-                    context.getString(R.string.details_changelog_unavailable)
-
-                B.headerIndicator.setOnClickListener {
-                    if (B.txtChangelog.isVisible) {
-                        B.headerIndicator.load(R.drawable.ic_arrow_down)
-                        B.txtChangelog.visibility = View.GONE
-                    } else {
-                        B.headerIndicator.load(R.drawable.ic_arrow_up)
-                        B.txtChangelog.visibility = View.VISIBLE
-                    }
-                }
+    fun app(app: App) {
+        /*Inflate App details*/
+        with(app) {
+            B.txtLine1.text = displayName
+            B.imgIcon.load(iconArtwork.url) {
+                placeholder(R.drawable.bg_placeholder)
+                transformations(RoundedCornersTransformation(8.px.toFloat()))
             }
 
-            /*Inflate Download details*/
-            updateFile.group?.let {
-                when (updateFile.state) {
-                    State.QUEUED -> {
-                        B.progressDownload.progress = 0
-                        B.progressDownload.show()
-                        B.btnAction.updateState(State.QUEUED)
-                    }
-                    State.IDLE, State.CANCELED -> {
-                        B.progressDownload.progress = 0
-                        B.progressDownload.invisible()
-                        B.btnAction.updateState(State.IDLE)
-                    }
-                    State.PROGRESS -> {
-                        val progress = it.groupDownloadProgress
-                        if (progress > 0) {
-                            if (progress == 100) {
-                                B.progressDownload.invisible()
-                            } else {
-                                B.progressDownload.progress = progress
-                                B.progressDownload.show()
-                            }
-                        }
-                    }
-                    State.COMPLETE -> {
-                        B.progressDownload.invisible()
-                        B.btnAction.updateState(State.COMPLETE)
-                    }
+            B.txtLine2.text = developerName
+            B.txtLine3.text = ("${CommonUtil.addSiPrefix(size)}  •  $updatedOn")
+            B.txtLine4.text = ("$versionName (${versionCode})")
+            B.txtChangelog.text = if (changes.isNotEmpty())
+                HtmlCompat.fromHtml(
+                    changes,
+                    HtmlCompat.FROM_HTML_OPTION_USE_CSS_COLORS
+                )
+            else
+                context.getString(R.string.details_changelog_unavailable)
+
+            B.headerIndicator.setOnClickListener {
+                if (B.txtChangelog.isVisible) {
+                    B.headerIndicator.icon = ContextCompat.getDrawable(context, R.drawable.ic_arrow_down)
+                    B.txtChangelog.visibility = View.GONE
+                } else {
+                    B.headerIndicator.icon = ContextCompat.getDrawable(context, R.drawable.ic_arrow_up)
+                    B.txtChangelog.visibility = View.VISIBLE
                 }
             }
         }
     }
 
     @ModelProp
-    fun state(state: State?) {
-        state?.let {
-            B.btnAction.updateState(it)
+    fun download(download: Download?) {
+        if (download != null) {
+            /*Inflate Download details*/
+            B.btnAction.updateState(download.downloadStatus)
+            B.progressDownload.isIndeterminate = download.progress < 1
+            when (download.downloadStatus) {
+                DownloadStatus.QUEUED -> {
+                    B.progressDownload.progress = 0
+                    B.progressDownload.show()
+                }
+                DownloadStatus.DOWNLOADING -> {
+                    if (download.progress > 0) {
+                        if (download.progress == 100) {
+                            B.progressDownload.invisible()
+                        } else {
+                            B.progressDownload.progress = download.progress
+                            B.progressDownload.show()
+                        }
+                    }
+                }
+                else -> {
+                    B.progressDownload.progress = 0
+                    B.progressDownload.invisible()
+                }
+            }
         }
     }
 
@@ -141,11 +149,6 @@ class AppUpdateView : RelativeLayout {
     }
 
     @CallbackProp
-    fun installAction(onClickListener: OnClickListener?) {
-        B.btnAction.addInstallOnClickListener(onClickListener)
-    }
-
-    @CallbackProp
     fun longClick(onClickListener: OnLongClickListener?) {
         B.layoutContent.setOnLongClickListener(onClickListener)
     }
@@ -153,6 +156,7 @@ class AppUpdateView : RelativeLayout {
     @OnViewRecycled
     fun clear() {
         B.headerIndicator.removeCallbacks { }
+        B.progressDownload.progress = 0
         B.progressDownload.invisible()
     }
 }

@@ -1,3 +1,22 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.epoxy.views.preference
 
 import android.content.Context
@@ -11,7 +30,6 @@ import com.aurora.store.R
 import com.aurora.store.data.model.Dash
 import com.aurora.store.databinding.ViewDashBinding
 import com.aurora.store.view.epoxy.views.BaseView
-import com.aurora.store.view.ui.onboarding.WelcomeFragment
 
 @ModelView(
     autoLayout = ModelView.Size.MATCH_WIDTH_WRAP_HEIGHT,
@@ -46,16 +64,7 @@ class DashView : RelativeLayout {
     fun dash(dash: Dash) {
         B.line1.text = dash.title
         B.line2.text = dash.subtitle
-
-        var icon = WelcomeFragment.icMap[dash.icon]
-        if (icon == null)
-            icon = R.drawable.ic_arrow_right
-        B.img.setImageDrawable(
-            ContextCompat.getDrawable(
-                context,
-                icon
-            )
-        )
+        B.img.setImageDrawable(ContextCompat.getDrawable(context, dash.icon))
     }
 
     @CallbackProp

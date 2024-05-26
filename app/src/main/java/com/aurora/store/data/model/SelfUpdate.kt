@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,21 +19,58 @@
 
 package com.aurora.store.data.model
 
+import android.content.Context
+import com.aurora.Constants
+import com.aurora.gplayapi.data.models.App
+import com.aurora.gplayapi.data.models.Artwork
+import com.aurora.gplayapi.data.models.File
+import com.aurora.store.BuildConfig
+import com.aurora.store.R
+import com.aurora.store.util.CertUtil
 import com.google.gson.annotations.SerializedName
 
-class SelfUpdate {
-    @SerializedName("version_name")
-    var versionName: String = String()
+data class SelfUpdate(
+    @SerializedName("version_name") var versionName: String = String(),
+    @SerializedName("version_code") var versionCode: Int = 0,
+    @SerializedName("aurora_build") var auroraBuild: String = String(),
+    @SerializedName("fdroid_build") var fdroidBuild: String = String(),
+    @SerializedName("updated_on") var updatedOn: String = String(),
+    val changelog: String = String(),
+    val size: Long = 0L
+) {
+    companion object {
+        private const val BASE_URL = "https://gitlab.com/AuroraOSS/AuroraStore/-/raw/master"
 
-    @SerializedName("version_code")
-    var versionCode: Int = 0
+        fun toApp(selfUpdate: SelfUpdate, context: Context): App {
+            // Keep paths updated with fastlane data on project
+            val icon = "fastlane/metadata/android/en-US/images/icon.png"
 
-    @SerializedName("aurora_build")
-    var auroraBuild: String = String()
+            val downloadURL = if (CertUtil.isFDroidApp(context, BuildConfig.APPLICATION_ID)) {
+                selfUpdate.fdroidBuild
+            } else {
+                selfUpdate.auroraBuild
+            }
 
-    @SerializedName("fdroid_build")
-    var fdroidBuild: String = String()
-
-    @SerializedName("changelog")
-    var changelog: String = String()
+            return App(
+                packageName = Constants.APP_ID,
+                versionCode = selfUpdate.versionCode,
+                versionName = selfUpdate.versionName,
+                changes = selfUpdate.changelog,
+                size = selfUpdate.size,
+                updatedOn = selfUpdate.updatedOn,
+                displayName = context.getString(R.string.app_name),
+                developerName = "Rahul Kumar Patel",
+                iconArtwork = Artwork(url = "$BASE_URL/$icon"),
+                fileList = mutableListOf(
+                    File(
+                        name = "${Constants.APP_ID}.apk",
+                        url = downloadURL,
+                        size = selfUpdate.size
+                    )
+                ),
+                isFree = true,
+                isInstalled = true
+            )
+        }
+    }
 }

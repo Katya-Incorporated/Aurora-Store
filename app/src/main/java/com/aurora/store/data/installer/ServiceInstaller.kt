@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,21 +32,30 @@ import android.os.RemoteException
 import androidx.core.content.FileProvider
 import com.aurora.services.IPrivilegedCallback
 import com.aurora.services.IPrivilegedService
-import com.aurora.store.AuroraApplication
+import com.aurora.store.AuroraApp
 import com.aurora.store.BuildConfig
 import com.aurora.store.R
 import com.aurora.store.data.event.BusEvent
 import com.aurora.store.data.event.InstallerEvent
+import com.aurora.store.data.model.InstallerInfo
+import com.aurora.store.data.room.download.Download
 import com.aurora.store.util.Log
 import com.aurora.store.util.PackageUtil
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.greenrobot.eventbus.EventBus
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ServiceInstaller(context: Context) : InstallerBase(context) {
+@Singleton
+@Deprecated("Deprecated in favour of RootInstaller")
+class ServiceInstaller @Inject constructor(
+    @ApplicationContext context: Context
+) : InstallerBase(context) {
 
     private lateinit var serviceConnection: ServiceConnection
     private val executor = ThreadPoolExecutor(0, 1, 30L, TimeUnit.SECONDS, LinkedBlockingQueue())
@@ -55,123 +64,40 @@ class ServiceInstaller(context: Context) : InstallerBase(context) {
         const val ACTION_INSTALL_REPLACE_EXISTING = 2
         const val PRIVILEGED_EXTENSION_PACKAGE_NAME = "com.aurora.services"
         const val PRIVILEGED_EXTENSION_SERVICE_INTENT = "com.aurora.services.IPrivilegedService"
-    }
 
-    override fun install(packageName: String, files: List<Any>) {
-
-        when {
-            isAlreadyQueued(packageName) -> {
-                Log.i("$packageName already queued")
-            }
-
-            PackageUtil.isInstalled(context, PRIVILEGED_EXTENSION_PACKAGE_NAME) -> {
-                Log.i("Received service install request for $packageName")
-                val uriList = files.map {
-                    when (it) {
-                        is File -> getUri(it)
-                        is String -> getUri(File(it))
-                        else -> {
-                            throw Exception("Invalid data, expecting listOf() File or String")
-                        }
-                    }
-                }
-                val fileList = files.map {
-                    when (it) {
-                        is File -> it.absolutePath
-                        is String -> File(it).absolutePath
-                        else -> {
-                            throw Exception("Invalid data, expecting listOf() File or String")
-                        }
-                    }
-                }
-
-                xInstall(packageName, uriList, fileList)
-            }
-            else -> {
-                postError(
-                    packageName,
-                    context.getString(R.string.installer_status_failure),
-                    context.getString(R.string.installer_service_unavailable)
-                )
-            }
+        fun getInstallerInfo(context: Context): InstallerInfo {
+            return InstallerInfo(
+                id = 3,
+                title = context.getString(R.string.pref_install_mode_services),
+                subtitle = context.getString(R.string.services_installer_subtitle),
+                description = context.getString(R.string.services_installer_desc)
+            )
         }
     }
 
-    override fun uninstall(packageName: String) {
-        executor.execute {
-            val readyWithAction = AtomicBoolean(false)
-            Handler(Looper.getMainLooper()).post {
-                val serviceConnection = object : ServiceConnection {
-                    override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-                        if (isAlreadyQueued(packageName)) {
-                            if (::serviceConnection.isInitialized) {
-                                context.unbindService(serviceConnection)
-                            }
-                            readyWithAction.set(true)
-                            return
-                        }
-                        AuroraApplication.enqueuedInstalls.add(packageName)
-                        val service = IPrivilegedService.Stub.asInterface(binder)
+    override fun install(download: Download) {
+        super.install(download)
 
-                        if (service.hasPrivilegedPermissions()) {
-                            Log.i(context.getString(R.string.installer_service_available))
+        when {
+            isAlreadyQueued(download.packageName) -> {
+                Log.i("${download.packageName} already queued")
+            }
 
-                            val callback = object : IPrivilegedCallback.Stub() {
-
-                                override fun handleResult(packageName: String, returnCode: Int) {}
-
-                                override fun handleResultX(
-                                    packageName: String,
-                                    returnCode: Int,
-                                    extra: String?
-                                ) {
-                                    removeFromInstallQueue(packageName)
-                                    handleCallbackUninstall(packageName, returnCode, extra)
-                                    readyWithAction.set(true)
-                                }
-                            }
-
-                            try {
-                                service.deletePackageX(
-                                    packageName,
-                                    2,
-                                    BuildConfig.APPLICATION_ID,
-                                    callback
-                                )
-                            } catch (e: RemoteException) {
-                                Log.e("Failed to connect Aurora Services")
-                                removeFromInstallQueue(packageName)
-                                readyWithAction.set(true)
-                            }
-                        } else {
-                            removeFromInstallQueue(packageName)
-                            postError(
-                                packageName,
-                                context.getString(R.string.installer_status_failure),
-                                context.getString(R.string.installer_service_misconfigured)
-                            )
-                            readyWithAction.set(true)
-                        }
-                    }
-
-                    override fun onServiceDisconnected(name: ComponentName) {
-                        removeFromInstallQueue(packageName)
-                        Log.e("Disconnected from Aurora Services")
-                        readyWithAction.set(true)
-                    }
-                }
-
-                val intent = Intent(PRIVILEGED_EXTENSION_SERVICE_INTENT)
-                intent.setPackage(PRIVILEGED_EXTENSION_PACKAGE_NAME)
-
-                context.bindService(
-                    intent,
-                    serviceConnection,
-                    Context.BIND_AUTO_CREATE
+            PackageUtil.isInstalled(context, PRIVILEGED_EXTENSION_PACKAGE_NAME) -> {
+                Log.i("Received service install request for ${download.packageName}")
+                val fileList = getFiles(download.packageName, download.versionCode)
+                xInstall(
+                    download.packageName,
+                    fileList.map { getUri(it) },
+                    fileList.map { it.absolutePath }
                 )
             }
-            while (!readyWithAction.get()) {
-                Thread.sleep(1000)
+            else -> {
+                postError(
+                    download.packageName,
+                    context.getString(R.string.installer_status_failure),
+                    context.getString(R.string.installer_service_unavailable)
+                )
             }
         }
     }
@@ -189,7 +115,7 @@ class ServiceInstaller(context: Context) : InstallerBase(context) {
                             readyWithAction.set(true)
                             return
                         }
-                        AuroraApplication.enqueuedInstalls.add(packageName)
+                        AuroraApp.enqueuedInstalls.add(packageName)
                         val service = IPrivilegedService.Stub.asInterface(binder)
 
                         if (service.hasPrivilegedPermissions()) {
@@ -321,6 +247,8 @@ class ServiceInstaller(context: Context) : InstallerBase(context) {
                             context.getString(R.string.installer_status_success)
                         )
                     )
+                    // Installation is not yet finished if this is a shared library
+                    if (packageName == download?.packageName) onInstallationSuccess()
                 }
                 else -> {
                     val error = AppInstaller.getErrorString(

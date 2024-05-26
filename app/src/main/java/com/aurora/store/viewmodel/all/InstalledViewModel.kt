@@ -1,70 +1,50 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.viewmodel.all
 
-import android.app.Application
+import android.content.Context
+import android.util.Log
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aurora.extensions.flushAndAdd
-import com.aurora.store.data.RequestState
-import com.aurora.store.data.event.BusEvent
+import com.aurora.gplayapi.data.models.App
+import com.aurora.store.util.AppUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import java.util.Locale
 
-class InstalledViewModel(application: Application) : BaseAppsViewModel(application) {
+class InstalledViewModel : ViewModel() {
 
-    init {
-        EventBus.getDefault().register(this)
+    private val TAG = InstalledViewModel::class.java.simpleName
 
-        requestState = RequestState.Init
-        observe()
-    }
+    private var appList: MutableList<App> = mutableListOf()
+    val liveData: MutableLiveData<List<App>> = MutableLiveData()
 
-    override fun observe() {
+    fun getInstalledApps(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                appList.flushAndAdd(getFilteredApps())
+                appList = AppUtil.getFilteredInstalledApps(context).toMutableList()
                 liveData.postValue(appList.sortedBy { it.displayName.lowercase(Locale.getDefault()) })
-                requestState = RequestState.Complete
-            } catch (e: Exception) {
-                requestState = RequestState.Pending
+            } catch (exception: Exception) {
+                Log.e(TAG, "Failed to get installed apps", exception)
             }
         }
-    }
-
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onEvent(event: BusEvent) {
-        when (event) {
-            is BusEvent.InstallEvent -> {
-                updateListAndPost(event.packageName)
-            }
-            is BusEvent.UninstallEvent -> {
-                updateListAndPost(event.packageName)
-            }
-            is BusEvent.Blacklisted -> {
-                observe()
-            }
-            else -> {
-
-            }
-        }
-    }
-
-    private fun updateListAndPost(packageName: String) {
-        //Remove from current list
-        val updatedList = appList.filter {
-            it.packageName != packageName
-        }.toList()
-
-        appList.flushAndAdd(updatedList)
-
-        //Post new update list
-        liveData.postValue(appList.sortedBy { it.displayName.lowercase(Locale.getDefault()) })
-    }
-
-    override fun onCleared() {
-        EventBus.getDefault().unregister(this)
-        super.onCleared()
     }
 }

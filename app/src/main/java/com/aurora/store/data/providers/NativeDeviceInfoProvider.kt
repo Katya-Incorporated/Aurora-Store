@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -153,15 +153,15 @@ class NativeDeviceInfoProvider(context: Context) : ContextWrapper(context) {
     }
 
     private fun stripHuaweiProperties(properties: Properties): Properties {
-        //Add i-Phoney properties
-        properties["Build.HARDWARE"] = "unknown"
-        properties["Build.BOOTLOADER"] = "unknown"
-        properties["Build.BRAND"] = "PassionFruit"
-        properties["Build.DEVICE"] = "ProPlus5GFold"
-        properties["Build.MODEL"] = "iPhoney"
-        properties["Build.MANUFACTURER"] = "PassionFruit"
-        properties["Build.PRODUCT"] = "iPhoney_24"
-        properties["Build.ID"] = "ABC.123"
+        //Add Pixel 7a properties
+        properties["Build.HARDWARE"] = "lynx"
+        properties["Build.BOOTLOADER"] = "lynx-1.0-9716681"
+        properties["Build.BRAND"] = "google"
+        properties["Build.DEVICE"] = "lynx"
+        properties["Build.MODEL"] = "Pixel 7a"
+        properties["Build.MANUFACTURER"] = "Google"
+        properties["Build.PRODUCT"] = "lynx"
+        properties["Build.ID"] = "TQ2A.230505.002"
         return properties
     }
 }

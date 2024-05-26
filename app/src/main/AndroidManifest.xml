@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ Aurora Store
-  ~  Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+  ~  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
   ~  Copyright (C) 2022, The Calyx Institute
+  ~  Copyright (C) 2023, grrfe <grrfe@420blaze.it>
   ~
   ~  Aurora Store is free software: you can redistribute it and/or modify
   ~  it under the terms of the GNU General Public License as published by
@@ -27,6 +28,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -37,6 +40,8 @@
     <uses-permission android:name="android.permission.DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
+    <uses-permission android:name="android.permission.ENFORCE_UPDATE_OWNERSHIP" />
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -53,23 +58,25 @@
         android:name="android.hardware.gamepad"
         android:required="false"/>
 
+    <uses-feature
+        android:name="android.software.device_admin"
+        android:required="false" />
+
     <application
-        android:name=".AuroraApplication"
+        android:name=".AuroraApp"
         android:allowBackup="true"
         android:banner="@drawable/ic_tv_banner"
+        android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
-        android:killAfterRestore="false"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
-        android:restoreAnyVersion="true"
-        android:restoreNeedsApplication="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:fullBackupContent="@xml/backup_rules_legacy"
         android:dataExtractionRules="@xml/backup_rules"
-        tools:targetApi="m">
+        tools:targetApi="tiramisu">
 
         <activity
             android:name=".MainActivity"
@@ -80,14 +87,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
             <nav-graph android:value="@navigation/mobile_navigation" />
         </activity>
 
-        <service android:name=".data.service.NotificationService" />
-        <service android:name=".data.installer.InstallerService" />
-        <service android:name=".data.service.UpdateService" />
-        <service android:name=".data.service.SelfUpdateService" />
+        <!-- Notification Action (Download Complete) -->
+        <activity
+            android:name=".data.activity.InstallActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.Translucent" />
 
+        <!-- DownloadWorker -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+        <!-- Third-party installers -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileProvider"
@@ -98,6 +119,7 @@
                 android:resource="@xml/paths" />
         </provider>
 
+        <!-- Shizuku (Installer) -->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
@@ -107,8 +129,35 @@
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL"
             tools:ignore="MissingClass" />
 
-        <receiver android:name=".data.receiver.DownloadResumeReceiver" />
-        <receiver android:name=".data.receiver.DownloadPauseReceiver" />
-        <receiver android:name=".data.receiver.DownloadCancelReceiver" />
+        <!-- Hilt (WorkManager) -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <!-- Lifecycle (isForeground method in CommonUtils) -->
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+        <!-- Installation Status Receiver (Session Installer) -->
+        <receiver
+            android:name=".data.receiver.InstallerStatusReceiver"
+            android:exported="false" />
+
+        <!-- SessionInstaller (as device owner) -->
+        <receiver
+            android:name=".data.receiver.DeviceOwnerReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_owner_receiver" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

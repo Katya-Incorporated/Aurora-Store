@@ -1,3 +1,22 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.about
 
 import android.os.Bundle
@@ -14,7 +33,9 @@ import com.aurora.store.R
 import com.aurora.store.data.model.Link
 import com.aurora.store.databinding.FragmentAboutBinding
 import com.aurora.store.view.epoxy.views.preference.LinkViewModel_
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AboutFragment : Fragment(R.layout.fragment_about) {
 
     private var _binding: FragmentAboutBinding? = null
@@ -33,7 +54,11 @@ class AboutFragment : Fragment(R.layout.fragment_about) {
 
         // About Details
         binding.imgIcon.load(R.mipmap.ic_launcher)
-        binding.line2.text = ("v${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})")
+        binding.line2.text = view.context.getString(
+            R.string.version,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE
+        )
 
         binding.epoxyRecycler.layoutManager =
             LinearLayoutManager(view.context, RecyclerView.VERTICAL, false)

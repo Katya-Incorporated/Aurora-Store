@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- *  Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 package com.aurora.extensions
 
+import com.aurora.gplayapi.data.models.File
+
 fun <T> MutableList<T>.flushAndAdd(list: List<T>) {
     clear()
     addAll(list)
@@ -27,4 +29,8 @@ fun <T> MutableList<T>.flushAndAdd(list: List<T>) {
 fun <T> MutableSet<T>.flushAndAdd(list: Set<T>) {
     clear()
     addAll(list)
+}
+
+fun List<File>.requiresObbDir(): Boolean {
+    return this.any { it.type == File.FileType.OBB || it.type == File.FileType.PATCH }
 }

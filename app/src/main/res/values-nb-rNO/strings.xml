@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="details_free">Gratis</string>
     <string name="details_dev_website">Nettsted</string>
     <string name="details_dev_profile">Utviklerprofil</string>
@@ -28,11 +28,8 @@
     <string name="pref_ui_theme_dark">Mørk</string>
     <string name="pref_ui_theme_black">Svart</string>
     <string name="pref_install_mode_services">Aurora-tjenester</string>
-    <string name="pref_downloader_active_title">Aktiv nedlasting</string>
     <string name="pref_app_download">Nedlastinger</string>
-    <string name="onboarding_tos">Tjenestevilkår</string>
     <string name="onboarding_title_welcome">Velkommen</string>
-    <string name="onboarding_title_theme">Drakter</string>
     <string name="onboarding_title_permissions">Tilganger</string>
     <string name="menu_terms">Tjenestevilkår</string>
     <string name="menu_license">Lisens</string>
@@ -60,7 +57,6 @@
     <string name="download_failed">Nedlasting mislyktes</string>
     <string name="download_eta_calculating">Regner ut</string>
     <string name="download_completed">Nedlastet</string>
-    <string name="download_clear_completed">Tøm fullførte</string>
     <string name="download_canceled">Avbrutt</string>
     <string name="download_cancel_all">Avbryt alle</string>
     <string name="details_think_this_app">Hva synes du om dette programmet\?</string>
@@ -97,12 +93,12 @@
     <string name="action_leave">Forlat</string>
     <string name="action_later">Senere</string>
     <string name="action_join">Ta del</string>
-    <string name="action_installing">Installerer</string>
+    <string name="action_installing">Installerer …</string>
     <string name="action_installations">Installasjoner</string>
     <string name="action_install">Installer</string>
     <string name="action_ignore_version">Ignorer versjon</string>
     <string name="action_ignore">Ignorer</string>
-    <string name="action_granted">Innvilgjet</string>
+    <string name="action_granted">Innvilget</string>
     <string name="action_grant">Innvilg</string>
     <string name="action_finish">Fullfør</string>
     <string name="action_filter_rating">Vurderinger</string>
@@ -114,7 +110,6 @@
     <string name="action_filter_all">Alle</string>
     <string name="action_filter">Filter</string>
     <string name="action_export">Eksporter</string>
-    <string name="action_deny">Nekt</string>
     <string name="action_copy_link">Kopier lenke</string>
     <string name="action_copy">Kopier</string>
     <string name="action_close">Lukk</string>
@@ -123,7 +118,6 @@
     <string name="action_blacklist_add">Legg til i svartelisten</string>
     <string name="action_blacklist">Svartelist</string>
     <string name="action_back">Tilbake</string>
-    <string name="action_accept">Godta</string>
     <string name="account_login_using">Logg inn med</string>
     <string name="account_logged_out">Du er utlogget</string>
     <string name="account_google">Google</string>
@@ -171,18 +165,10 @@
     <string name="pref_install_mode_title">Installasjonsmetode</string>
     <string name="pref_install_mode_summary">Velg modus for APK-installasjon</string>
     <string name="pref_install_delete_summary">APK-er blir slettet som standard</string>
-    <string name="pref_install_auto_title">Installer APK-er automatisk etter nedlasting</string>
-    <string name="pref_install_auto_summary">Apper installeres umiddelbart etter at nedlastingen er fullført</string>
     <string name="pref_insecure_anonymous_title">Usikker anonym økt</string>
     <string name="pref_filter_google_summary">Fjerner alle Google Apps fra søkeresultater og kategori apper</string>
-    <string name="pref_downloader_active_summary">Maksimalt antall aktive nedlastinger</string>
     <string name="onboarding_permission_installer_desc">Tillat å installere apper fra Aurora Store</string>
     <string name="onboarding_welcome_select">Hvordan går det\?</string>
-    <string name="onboarding_tos_error">Du må merke TOS lest først.</string>
-    <string name="onboarding_tos_confirmation">Jeg har lest Aurora Stores vilkår for bruk.</string>
-    <string name="onboarding_tos_desc">Les våre vilkår for bruk og godta det for å bruke Aurora Store.</string>
-    <string name="onboarding_title_accent">Aksent</string>
-    <string name="onboarding_theme_select">Velg hva du liker</string>
     <string name="onboarding_permission_select">Aurora Store krever følgende tillatelser</string>
     <string name="dialog_title_self_update">Ny oppdatering tilgjengelig</string>
     <string name="device_miui_title">MIUI oppdaget!</string>
@@ -200,7 +186,7 @@
     <string name="action_filter_gsf_dependent_apps">GSF avhengig</string>
     <string name="action_disable">Deaktiver</string>
     <string name="account_logout">Logg ut fra Aurora</string>
-    <string name="about_xda_summary">Se Aurora Store XDA-tråden for diskusjoner eller forslag.</string>
+    <string name="about_xda_summary">Se Aurora Store-tråden på XDA for diskusjoner eller forslag.</string>
     <string name="about_telegram_summary">Bli med i Aurora Support-gruppen for diskusjoner eller forslag.</string>
     <string name="about_gitlab_summary">Få kildekoden til Aurora Store fra Aurora OSS på GitLab.</string>
     <string name="about_fdroid_summary">Få Aurora Store via F-Droid.</string>
@@ -210,11 +196,8 @@
     <string name="details_changelog_unavailable">Endringslogg ikke inkludert</string>
     <string name="action_check">Sjekk</string>
     <string name="about_libera_summary">Bli patron på Liberapay</string>
-    <string name="pref_updates_extended_desc">Ser etter nye versjoner av avskrudde programmer også</string>
-    <string name="pref_downloader_external_desc">Eksternlagring brukes for nedlastninger, eksporter, osv.</string>
     <string name="installer_service_unavailable">Installer Aurora Services 1.0.9 eller nyere, eller endre installasjonsprogrammet.</string>
     <string name="toast_developer_setting_failed">Skru på utviklingsinnstillingene fra enhetsinnstillingene for å åpne dem.</string>
-    <string name="pref_updates_extended">Utvidede oppgraderinger</string>
     <string name="toast_page_unavailable">Utforskningssiden er utilgjengelig</string>
     <string name="toast_spoof_applied">Enhetslureri i bruk.</string>
     <string name="pref_ui_similar_apps_desc">Vis lignende og relaterte klynger på appdetaljsiden</string>
@@ -222,7 +205,6 @@
     <string name="pref_ui_theme_darkord">Uenighet</string>
     <string name="pref_ui_accent_title">Aksent</string>
     <string name="pref_filter_search_summary">Søkefiltre tilbakestilles ved hvert søk. Slå av for å lagre søkefiltre</string>
-    <string name="pref_downloader_external">Eksternlager for bruker</string>
     <string name="pref_abandon_session_desc">Fjern forlatte eller ventende installasjonsøkter</string>
     <string name="pref_abandon_session">Tving frem klare installasjonsøkter</string>
     <string name="installer_service_misconfigured">Sett opp Aurora-tjenester og innvilg alle tilganger først.</string>
@@ -255,8 +237,6 @@
     <string name="pref_ui_layout_tab">Velg forvalgt fane</string>
     <string name="pref_ui_layout">Oppsett</string>
     <string name="pref_ui_title">Tilpasning</string>
-    <string name="pref_install_profile_title">Installasjonsprofiler (eksperimentelt)</string>
-    <string name="pref_install_profile_summary">Velg målprofilen du vil installere apper på. Fungerer kun med rotinstallasjonsmetoden</string>
     <string name="pref_install_mode_native">Systemspesifikk installerer</string>
     <string name="pref_install_mode_session">Økt-installerer</string>
     <string name="pref_install_mode_root">Rot-installerer</string>
@@ -265,7 +245,6 @@
     <string name="onboarding_permission_installer">Tilgang for installerer</string>
     <string name="onboarding_permission_esa">Tilgang til eksternlagring</string>
     <string name="onboarding_title_installer">Installerer</string>
-    <string name="onboarding_installer_select">Velg en egnet installerer</string>
     <string name="notification_channel_general">Generell merknad</string>
     <string name="notification_channel_alert">Hurtigmerknad</string>
     <string name="dialog_desc_native_split">Du kan ikke installere medfølgende (delte) apper via Native Installer. Endre installasjonsprogrammet til Session, Services eller Root.</string>
@@ -280,4 +259,37 @@
     <string name="pref_install_mode_am">AM installatør.</string>
     <string name="installer_am_unavailable">Installer App Manager eller endre installasjonsprogrammet.</string>
     <string name="account_anonymous_insecure">Anonym (usikkert)</string>
+    <string name="installer_shizuku_unavailable">Shizuku er enten ikke installert eller satt opp på riktig vis.</string>
+    <string name="ui_accent_7">Grå</string>
+    <string name="ui_accent_1">Blå</string>
+    <string name="spoof_property"><xliff:g id="manufacturer">%1$s</xliff:g> • API <xliff:g id="api">%2$s</xliff:g></string>
+    <string name="session_verifying">Bekrefter økt …</string>
+    <string name="ui_accent_0">System</string>
+    <string name="session_login">Logg inn først</string>
+    <string name="onboarding_permission_notifications">Merknader</string>
+    <string name="toast_import_failed">Kunne ikke importere enhetsoppsett</string>
+    <string name="ui_accent_5">Grønn</string>
+    <string name="download_eta_sec">%1$d s igjen</string>
+    <string name="app_links_desc">Tillat Aurora Store å åpne støttede lenker</string>
+    <string name="requesting_new_session">Forespør ny økt …</string>
+    <string name="action_import">Importer</string>
+    <string name="title_search_suggestion">Søkeforslag</string>
+    <string name="title_advanced">Avansert</string>
+    <string name="ui_accent_8">Rosa</string>
+    <string name="menu">Meny</string>
+    <string name="download_eta_min">%1$d m %2$d s igjen</string>
+    <string name="ui_accent_6">Lilla</string>
+    <string name="app_links_title">Programlenker</string>
+    <string name="open_in_aurora">Åpne i Aurora Store</string>
+    <string name="ui_accent_11">Lyseblå</string>
+    <string name="verifying_new_session">Bekrefter ny økt …</string>
+    <string name="download_eta_hrs">%1$d t %2$d m %3$d s igjen</string>
+    <string name="session_init">Klargjør …</string>
+    <string name="session_verifying_google">Bekrefter Google-økt …</string>
+    <string name="expand">Utvid</string>
+    <string name="title_search_results">Søkeresultater</string>
+    <string name="ui_accent_3">Rød</string>
+    <string name="onboarding_permission_notifications_desc">Send merknader om installasjonsstatus.</string>
+    <string name="ui_accent_10">Oransje</string>
+    <string name="app_language">Programspråk</string>
 </resources>

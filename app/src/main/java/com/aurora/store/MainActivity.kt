@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *  Copyright (C) 2022, The Calyx Institute
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
@@ -20,67 +20,34 @@
 
 package com.aurora.store
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.activity.addCallback
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.FloatingWindow
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import coil.load
-import coil.transform.RoundedCornersTransformation
-import com.aurora.Constants
 import com.aurora.extensions.accentColor
 import com.aurora.extensions.applyThemeAccent
-import com.aurora.extensions.isRAndAbove
-import com.aurora.extensions.toast
-import com.aurora.gplayapi.data.models.AuthData
 import com.aurora.store.data.model.NetworkStatus
-import com.aurora.store.data.model.SelfUpdate
-import com.aurora.store.data.providers.AuthProvider
 import com.aurora.store.data.providers.NetworkProvider
 import com.aurora.store.databinding.ActivityMainBinding
-import com.aurora.store.util.Log
 import com.aurora.store.util.Preferences
 import com.aurora.store.util.Preferences.PREFERENCE_DEFAULT_SELECTED_TAB
 import com.aurora.store.view.ui.sheets.NetworkDialogSheet
-import com.aurora.store.view.ui.sheets.SelfUpdateSheet
-import com.aurora.store.viewmodel.MainViewModel
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationBarView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var B: ActivityMainBinding
     private lateinit var navController: NavController
-    private lateinit var authData: AuthData
-    private lateinit var appConfig: AppBarConfiguration
-
-    private val viewModel: MainViewModel by viewModels()
-
-    private val startForPermissions =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            if (!it) toast(R.string.permissions_denied)
-        }
 
     // TopLevelFragments
     private val topLevelFrags = listOf(
@@ -96,9 +63,13 @@ class MainActivity : AppCompatActivity() {
         B = ActivityMainBinding.inflate(layoutInflater)
         setContentView(B.root)
 
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHostFragment.navController
+
         this.lifecycleScope.launch {
-            NetworkProvider(this@MainActivity).networkStatus.collect {
-                when(it) {
+            NetworkProvider(applicationContext).networkStatus.collect {
+                when (it) {
                     NetworkStatus.AVAILABLE -> {
                         if (!supportFragmentManager.isDestroyed && isIntroDone()) {
                             val fragment = supportFragmentManager
@@ -110,6 +81,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
+
                     NetworkStatus.LOST -> {
                         if (!supportFragmentManager.isDestroyed && isIntroDone()) {
                             supportFragmentManager.beginTransaction()
@@ -121,40 +93,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        authData = AuthProvider.with(this).getAuthData()
-
-        // Toolbar
-        setSupportActionBar(B.toolbar)
-
-        attachNavigation()
-        attachDrawer()
-        attachSearch()
-
-        /*Check only if download to external storage is enabled*/
-        if (Preferences.getBoolean(this, Preferences.PREFERENCE_DOWNLOAD_EXTERNAL)) {
-            if (isRAndAbove()) {
-                checkExternalStorageManagerPermission()
-            } else {
-                if (ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    startForPermissions.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                }
-            }
-        }
-
-        /* Check self update only for stable release, skip debug & nightlies*/
-        if (BuildConfig.APPLICATION_ID == Constants.APP_ID) viewModel.checkSelfUpdate(this)
-        this.lifecycleScope.launch {
-            viewModel.selfUpdateAvailable.collect {
-                if (it != null) {
-                    showUpdatesSheet(it)
-                } else {
-                    Log.i("No self-update available")
-                }
-            }
+        (B.navView as NavigationBarView).apply {
+            val alphaColor = ColorUtils.setAlphaComponent(this@MainActivity.accentColor(), 100)
+            setupWithNavController(navController)
+            itemActiveIndicatorColor = ColorStateList.valueOf(alphaColor)
         }
 
         // Handle quick exit from back actions
@@ -164,107 +106,28 @@ class MainActivity : AppCompatActivity() {
             else -> R.id.appsContainerFragment
         }
         onBackPressedDispatcher.addCallback(this) {
-            if (!B.drawerLayout.isOpen) {
-                if (navController.currentDestination?.id in topLevelFrags) {
-                    if (navController.currentDestination?.id == defaultTab) {
-                        finish()
-                    } else {
-                        navController.navigate(defaultTab)
-                    }
+            if (navController.currentDestination?.id in topLevelFrags) {
+                if (navController.currentDestination?.id == defaultTab) {
+                    finish()
                 } else {
-                    navController.navigateUp()
+                    navController.navigate(defaultTab)
                 }
+            } else if (navHostFragment.childFragmentManager.backStackEntryCount == 0) {
+                // We are on either on onboarding or splash fragment
+                finish()
             } else {
-                B.drawerLayout.close()
+                navController.navigateUp()
             }
-        }
-
-        // Handle intents
-        when (intent?.action) {
-            Constants.NAVIGATION_UPDATES -> B.navView.selectedItemId = R.id.updatesFragment
-            else -> Log.i("Unhandled intent action: ${intent.action}")
         }
 
         // Handle views on fragments
         navController.addOnDestinationChangedListener { _, navDestination, _ ->
             if (navDestination !is FloatingWindow) {
                 when (navDestination.id) {
-                    in topLevelFrags -> {
-                        B.searchFab.visibility = View.VISIBLE
-                        B.navView.visibility = View.VISIBLE
-                        B.toolbar.visibility = View.VISIBLE
-                    }
-                    R.id.appDetailsFragment -> {
-                        hideTopLevelOnlyViews()
-                    }
-                    else -> {
-                        hideTopLevelOnlyViews()
-                    }
+                    in topLevelFrags -> B.navView.visibility = View.VISIBLE
+                    else -> B.navView.visibility = View.GONE
                 }
             }
-        }
-    }
-
-    private fun hideTopLevelOnlyViews() {
-        B.searchFab.visibility = View.GONE
-        B.navView.visibility = View.GONE
-        B.toolbar.visibility = View.GONE
-    }
-
-    private fun attachSearch() {
-        B.searchFab.setOnClickListener {
-            navController.navigate(R.id.searchSuggestionFragment)
-        }
-    }
-
-    private fun attachNavigation() {
-        val bottomNavigationView: BottomNavigationView = B.navView
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        navController = navHostFragment.navController
-        bottomNavigationView.setupWithNavController(navController)
-
-        bottomNavigationView.apply {
-            val alphaColor = ColorUtils.setAlphaComponent(this@MainActivity.accentColor(), 100)
-            itemActiveIndicatorColor = ColorStateList.valueOf(alphaColor)
-        }
-    }
-
-    private fun attachDrawer() {
-        val headerView: View = B.navigation.getHeaderView(0)
-
-        headerView.let {
-            it.findViewById<ImageView>(R.id.img)?.load(R.mipmap.ic_launcher) {
-                transformations(RoundedCornersTransformation(8F))
-            }
-            it.findViewById<TextView>(R.id.txt_name)?.text = getString(R.string.app_name)
-            it.findViewById<TextView>(R.id.txt_email)?.text =
-                ("v${BuildConfig.VERSION_NAME}.${BuildConfig.VERSION_CODE}")
-        }
-
-        appConfig = AppBarConfiguration.Builder(topLevelFrags.toSet())
-            .setOpenableLayout(B.root)
-            .build()
-        setupActionBarWithNavController(navController, appConfig)
-        B.navigation.setupWithNavController(navController)
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp(appConfig)
-    }
-
-    private fun checkExternalStorageManagerPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager())
-                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
-        }
-    }
-
-    private fun showUpdatesSheet(selfUpdate: SelfUpdate) {
-        if (!supportFragmentManager.isDestroyed) {
-            val sheet = SelfUpdateSheet.newInstance(selfUpdate)
-            sheet.isCancelable = false
-            sheet.show(supportFragmentManager, SelfUpdateSheet.TAG)
         }
     }
 

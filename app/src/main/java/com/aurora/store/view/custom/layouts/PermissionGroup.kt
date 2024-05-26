@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,18 +20,17 @@ package com.aurora.store.view.custom.layouts
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.content.pm.PermissionGroupInfo
 import android.content.pm.PermissionInfo
-import android.content.res.Resources.NotFoundException
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.util.AttributeSet
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import com.aurora.extensions.accentColor
 import com.aurora.extensions.showDialog
 import com.aurora.store.R
+import com.aurora.store.data.model.PermissionGroupInfo
 import java.util.Locale
 
 class PermissionGroup : LinearLayout {
@@ -78,7 +77,7 @@ class PermissionGroup : LinearLayout {
         //imageView.setColorFilter(getContext().getStyledAttributeColor(imageView.getContext(), android.R.attr.colorAccent));
     }
 
-    fun addPermission(permissionInfo: PermissionInfo) {
+    fun addPermission(permissionInfo: PermissionInfo, currentPerms: List<String> = emptyList()) {
         val title = permissionInfo.loadLabel(packageManager)
         val description = permissionInfo.loadDescription(packageManager)
 
@@ -99,7 +98,8 @@ class PermissionGroup : LinearLayout {
                 addPermissionLabel(
                     permissionLabelsView,
                     it,
-                    permissionMap[it]
+                    permissionMap[it],
+                    if (currentPerms.isNotEmpty()) permissionInfo.name !in currentPerms else false
                 )
             }
     }
@@ -107,12 +107,14 @@ class PermissionGroup : LinearLayout {
     private fun addPermissionLabel(
         permissionLabelsView: LinearLayout,
         label: String,
-        description: String?
+        description: String?,
+        isNewPerm: Boolean = false
     ) {
         val textView = TextView(context)
         textView.text = label
+        if (isNewPerm) textView.setTextColor(context.accentColor())
         textView.setOnClickListener {
-            var title: String = permissionGroupInfo.loadLabel(packageManager).toString()
+            var title: String = permissionGroupInfo.label
 
             if (title.contains("UNDEFINED")) {
                 title = "Android"
@@ -132,15 +134,8 @@ class PermissionGroup : LinearLayout {
         permissionLabelsView.addView(textView)
     }
 
-    private fun getPermissionGroupIcon(permissionGroupInfo: PermissionGroupInfo?): Drawable? {
-        return try {
-            ContextCompat.getDrawable(context, permissionGroupInfo!!.icon)
-        } catch (e: NotFoundException) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1)
-                permissionGroupInfo!!.loadUnbadgedIcon(packageManager)
-            else
-                permissionGroupInfo!!.loadIcon(packageManager)
-        }
+    private fun getPermissionGroupIcon(permissionGroupInfo: PermissionGroupInfo): Drawable? {
+        return ContextCompat.getDrawable(context, permissionGroupInfo.icon)
     }
 
     private fun getReadableLabel(label: String, packageName: String): String {

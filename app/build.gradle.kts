@@ -1,7 +1,8 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *  Copyright (C) 2022, The Calyx Institute
+ *  Copyright (C) 2023, grrfe <grrfe@420blaze.it>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,19 +22,19 @@
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.parcelize")
-    id("com.google.devtools.ksp")
-    id("androidx.navigation.safeargs.kotlin")
-    id("org.jlleitschuh.gradle.ktlint")
-    id("dev.rikka.tools.refine")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.jetbrains.kotlin.compose)
+    alias(libs.plugins.jetbrains.kotlin.parcelize)
+    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.androidx.navigation)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.rikka.tools.refine.plugin)
+    alias(libs.plugins.hilt.android.plugin)
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
+kotlin {
+    jvmToolchain(17)
 }
 
 android {
@@ -43,12 +44,11 @@ android {
     defaultConfig {
         applicationId = "com.aurora.store"
         minSdk = 21
-        targetSdk = 33
+        targetSdk = 34
 
-        versionCode = 49
-        versionName = "4.3.1"
+        versionCode = 58
+        versionName = "4.4.4"
 
-        vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -64,6 +64,14 @@ android {
                 storeFile = file(properties["STORE_FILE"] as String)
                 storePassword = properties["KEY_PASSWORD"] as String
             }
+        }
+        create("aosp") {
+            // Generated from the AOSP test key:
+            // https://android.googlesource.com/platform/build/+/refs/tags/android-11.0.0_r29/target/product/security/testkey.pk8
+            keyAlias = "testkey"
+            keyPassword = "testkey"
+            storeFile = file("testkey.jks")
+            storePassword = "testkey"
         }
     }
 
@@ -87,6 +95,7 @@ android {
 
         debug {
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("aosp")
         }
     }
 
@@ -94,8 +103,8 @@ android {
         buildConfig = true
         viewBinding = true
         aidl = true
+        compose = true
     }
-
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
@@ -116,75 +125,81 @@ android {
 
 dependencies {
 
-    //Protobuf
-    implementation("com.google.protobuf:protobuf-javalite:3.22.3")
-
     //Google's Goodies
-    implementation("com.google.android.material:material:1.9.0")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.google.android.material)
+    implementation(libs.google.gson)
+    implementation(libs.google.protobuf.javalite)
 
     //AndroidX
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("androidx.viewpager2:viewpager2:1.0.0")
-    implementation("androidx.vectordrawable:vectordrawable:1.1.0")
-    implementation("androidx.preference:preference-ktx:1.2.1")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.browser)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.preference.ktx)
+    implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.androidx.work.runtime.ktx)
 
-    //Arch LifeCycle
-    val life_version = "2.6.1"
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$life_version")
-    implementation("androidx.lifecycle:lifecycle-service:$life_version")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$life_version")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$life_version")
-
-    //Arch Navigation
-    val nav_version = "2.7.0"
-    implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
-    implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 
     //Coil
-    implementation("io.coil-kt:coil:2.4.0")
+    implementation(libs.coil.kt)
+    implementation(libs.coil.compose)
 
     //Shimmer
-    implementation("com.facebook.shimmer:shimmer:0.5.0")
+    implementation(libs.facebook.shimmer)
 
     //Epoxy
-    val epoxy_version = "5.1.2"
-    implementation("com.airbnb.android:epoxy:$epoxy_version")
-    ksp("com.airbnb.android:epoxy-processor:$epoxy_version")
+    implementation(libs.airbnb.epoxy.android)
+    ksp(libs.airbnb.epoxy.processor)
 
     //HTTP Clients
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-
-    //Fetch - Downloader
-    implementation("androidx.tonyodev.fetch2:xfetch2:3.1.6")
+    implementation(libs.squareup.okhttp)
 
     //EventBus
-    implementation("org.greenrobot:eventbus:3.3.1")
+    implementation(libs.greenrobot.eventbus)
 
     //Lib-SU
-    implementation("com.github.topjohnwu.libsu:core:5.0.5")
+    implementation(libs.github.topjohnwu.libsu)
 
-    //Love <3
-    implementation("com.gitlab.AuroraOSS:gplayapi:3.1.4")
-
-    //Browser
-    implementation("androidx.browser:browser:1.6.0")
+    //GPlayApi
+    implementation(libs.gitlab.auroraoss.gplayapi)
 
     //Shizuku
-    val shizuku_version = "13.1.1"
-    compileOnly("dev.rikka.hidden:stub:4.2.0")
-    implementation("dev.rikka.tools.refine:runtime:4.3.0")
-    implementation("dev.rikka.shizuku:api:${shizuku_version}")
-    implementation("dev.rikka.shizuku:provider:${shizuku_version}")
+    compileOnly(libs.rikka.hidden.stub)
+    implementation(libs.rikka.tools.refine.runtime)
+    implementation(libs.rikka.shizuku.api)
+    implementation(libs.rikka.shizuku.provider)
 
-    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
+    implementation(libs.lsposed.hiddenapibypass)
 
     //Test
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 
-    //WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.8.1")
+    //Hilt
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.androidx.compiler)
+    implementation(libs.hilt.android.core)
+    implementation(libs.hilt.androidx.work)
+
+    //Room
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+
+    // LeakCanary
+    debugImplementation(libs.squareup.leakcanary.android)
 }

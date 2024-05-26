@@ -1,3 +1,22 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.account
 
 import android.os.Build
@@ -19,18 +38,19 @@ import com.aurora.store.data.event.BusEvent
 import com.aurora.store.databinding.FragmentGoogleBinding
 import com.aurora.store.util.AC2DMUtil
 import com.aurora.store.viewmodel.auth.AuthViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
+@AndroidEntryPoint
 class GoogleFragment : Fragment(R.layout.fragment_google) {
 
     private val args: GoogleFragmentArgs by navArgs()
     private val viewModel: AuthViewModel by activityViewModels()
 
     companion object {
-        const val EMBEDDED_SETUP_URL =
-            "https://accounts.google.com/EmbeddedSetup/identifier?flowName=EmbeddedSetupAndroid"
+        const val EMBEDDED_SETUP_URL = "https://accounts.google.com/EmbeddedSetup"
         const val AUTH_TOKEN = "oauth_token"
         private const val JS_SCRIPT =
             "(function() { return document.getElementById('profileIdentifier').innerHTML; })();"
@@ -40,11 +60,11 @@ class GoogleFragment : Fragment(R.layout.fragment_google) {
     private val binding: FragmentGoogleBinding
         get() = _binding!!
 
-    private val cookieManager = CookieManager.getInstance()
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentGoogleBinding.bind(view)
+
+        val cookieManager = CookieManager.getInstance()
 
         binding.webview.apply {
             cookieManager.removeAllCookies(null)
@@ -95,6 +115,11 @@ class GoogleFragment : Fragment(R.layout.fragment_google) {
             }
             loadUrl(EMBEDDED_SETUP_URL)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onStart() {

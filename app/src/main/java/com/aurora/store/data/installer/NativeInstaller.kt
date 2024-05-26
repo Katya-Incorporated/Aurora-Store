@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,27 +23,40 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import com.aurora.extensions.runOnUiThread
+import com.aurora.store.R
+import com.aurora.store.data.model.InstallerInfo
+import com.aurora.store.data.room.download.Download
 import com.aurora.store.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class NativeInstaller(context: Context) : InstallerBase(context) {
+@Singleton
+@Deprecated("Deprecated in favour of SessionInstaller")
+class NativeInstaller @Inject constructor(
+    @ApplicationContext context: Context
+) : InstallerBase(context) {
 
-    override fun install(packageName: String, files: List<Any>) {
-        if (isAlreadyQueued(packageName)) {
-            Log.i("$packageName already queued")
+    companion object {
+
+        fun getInstallerInfo(context: Context): InstallerInfo {
+            return InstallerInfo(
+                id = 1,
+                title = context.getString(R.string.pref_install_mode_native),
+                subtitle = context.getString(R.string.native_installer_subtitle),
+                description = context.getString(R.string.native_installer_desc)
+            )
+        }
+    }
+
+    override fun install(download: Download) {
+        if (isAlreadyQueued(download.packageName)) {
+            Log.i("${download.packageName} already queued")
         } else {
-            Log.i("Received native install request for $packageName")
-            files.map {
-                when (it) {
-                    is File -> it
-                    is String -> File(it)
-                    else -> {
-                        throw Exception("Invalid data, expecting listOf() File or String")
-                    }
-                }
-            }.forEach {
-                xInstall(it)
-            }
+            Log.i("Received native install request for ${download.packageName}")
+            getFiles(download.packageName, download.versionCode).forEach { xInstall(it) }
         }
     }
 
@@ -51,17 +64,18 @@ class NativeInstaller(context: Context) : InstallerBase(context) {
         val intent: Intent
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            @Suppress("DEPRECATION")
             intent = Intent(Intent.ACTION_INSTALL_PACKAGE)
             intent.data = getUri(file)
             intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
         } else {
             intent = Intent(Intent.ACTION_VIEW)
             intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
         intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-        intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, "com.android.vending")
-        context.startActivity(intent)
+        intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, context.packageName)
+        runOnUiThread { context.startActivity(intent) }
     }
 }

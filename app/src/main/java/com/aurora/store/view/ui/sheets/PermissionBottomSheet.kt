@@ -1,44 +1,63 @@
+/*
+ * Aurora Store
+ * Copyright (C) 2019, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ * Aurora Store is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Aurora Store is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ */
 package com.aurora.store.view.ui.sheets
 
 import android.content.pm.PackageManager
-import android.content.pm.PermissionGroupInfo
 import android.content.pm.PermissionInfo
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.navigation.fragment.navArgs
 import com.aurora.extensions.hide
 import com.aurora.extensions.show
 import com.aurora.store.R
+import com.aurora.store.data.model.PermissionGroupInfo
 import com.aurora.store.databinding.SheetPermissionsBinding
 import com.aurora.store.view.custom.layouts.PermissionGroup
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
-class PermissionBottomSheet : BaseBottomSheet() {
+@AndroidEntryPoint
+class PermissionBottomSheet : BottomSheetDialogFragment(R.layout.sheet_permissions) {
 
-    private lateinit var B: SheetPermissionsBinding
+    private var _binding: SheetPermissionsBinding? = null
+    private val binding get() = _binding!!
+
     private lateinit var packageManager: PackageManager
+    private lateinit var currentPerms: List<String>
 
     private val args: PermissionBottomSheetArgs by navArgs()
 
-    override fun onCreateContentView(
-        inflater: LayoutInflater,
-        container: ViewGroup,
-        savedInstanceState: Bundle?
-    ): View {
-        B = SheetPermissionsBinding.inflate(inflater)
-        return B.root
-    }
-
-    override fun onContentViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        inflateData()
-    }
+        _binding = SheetPermissionsBinding.bind(view)
 
-    private fun inflateData() {
         packageManager = requireContext().packageManager
+        currentPerms = try {
+            packageManager.getPackageInfo(
+                args.app.packageName, PackageManager.GET_PERMISSIONS
+            ).requestedPermissions.toList()
+        } catch (_: Exception) {
+            emptyList()
+        }
 
         val permissionGroupWidgets: MutableMap<String, PermissionGroup?> =
             HashMap<String, PermissionGroup?>()
@@ -60,20 +79,26 @@ class PermissionBottomSheet : BaseBottomSheet() {
                 permissionGroupWidgets[permissionGroupInfo.name] = permissionGroup
             }
 
-            permissionGroup?.addPermission(permissionInfo)
+            permissionGroup?.addPermission(permissionInfo, currentPerms)
         }
 
-        B.permissionsContainer.removeAllViews()
+        binding.permissionsContainer.removeAllViews()
 
         val permissionGroupLabels: List<String> = ArrayList(permissionGroupWidgets.keys)
         permissionGroupLabels.sortedBy { it }.forEach {
-            B.permissionsContainer.addView(permissionGroupWidgets[it])
+            binding.permissionsContainer.addView(permissionGroupWidgets[it])
         }
 
-        if (permissionGroupLabels.isEmpty())
-            B.permissionsNone.show()
-        else
-            B.permissionsNone.hide()
+        if (permissionGroupLabels.isEmpty()) {
+            binding.permissionsNone.show()
+        } else {
+            binding.permissionsNone.hide()
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun getPermissionInfo(permissionName: String): PermissionInfo? {
@@ -89,7 +114,12 @@ class PermissionBottomSheet : BaseBottomSheet() {
             getFakePermissionGroupInfo(permissionInfo.packageName)
         } else {
             try {
-                packageManager.getPermissionGroupInfo(permissionInfo.group!!, 0)
+                val platformGroup = packageManager.getPermissionGroupInfo(permissionInfo.group!!, 0)
+                PermissionGroupInfo(
+                    platformGroup.name,
+                    platformGroup.icon,
+                    platformGroup.loadLabel(packageManager).toString()
+                )
             } catch (e: PackageManager.NameNotFoundException) {
                 getFakePermissionGroupInfo(permissionInfo.packageName)
             }
@@ -101,21 +131,12 @@ class PermissionBottomSheet : BaseBottomSheet() {
     }
 
     private fun getFakePermissionGroupInfo(packageName: String): PermissionGroupInfo {
-        val permissionGroupInfo = PermissionGroupInfo()
-        when (packageName) {
-            "android" -> {
-                permissionGroupInfo.icon = R.drawable.ic_permission_android
-                permissionGroupInfo.name = "android"
-            }
-            "com.google.android.gsf", "com.android.vending" -> {
-                permissionGroupInfo.icon = R.drawable.ic_permission_google
-                permissionGroupInfo.name = "google"
-            }
-            else -> {
-                permissionGroupInfo.icon = R.drawable.ic_permission_unknown
-                permissionGroupInfo.name = "unknown"
-            }
+        return when (packageName) {
+            "android" -> PermissionGroupInfo("android", R.drawable.ic_permission_android)
+            "com.google.android.gsf",
+            "com.android.vending" -> PermissionGroupInfo("google", R.drawable.ic_permission_google)
+
+            else -> PermissionGroupInfo()
         }
-        return permissionGroupInfo
     }
 }

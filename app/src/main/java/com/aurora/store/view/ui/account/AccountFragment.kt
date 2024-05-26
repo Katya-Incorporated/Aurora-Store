@@ -1,3 +1,22 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.account
 
 import android.os.Bundle
@@ -7,6 +26,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import coil.load
 import coil.transform.RoundedCornersTransformation
+import com.aurora.Constants.URL_DISCLAIMER
+import com.aurora.Constants.URL_LICENSE
+import com.aurora.Constants.URL_TOS
 import com.aurora.extensions.browse
 import com.aurora.gplayapi.data.models.AuthData
 import com.aurora.store.R
@@ -15,7 +37,9 @@ import com.aurora.store.data.providers.AccountProvider
 import com.aurora.store.data.providers.AuthProvider
 import com.aurora.store.databinding.FragmentAccountBinding
 import com.aurora.store.viewmodel.auth.AuthViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AccountFragment : Fragment(R.layout.fragment_account) {
 
     private var _binding: FragmentAccountBinding? = null
@@ -26,11 +50,6 @@ class AccountFragment : Fragment(R.layout.fragment_account) {
 
     private lateinit var authData: AuthData
     private lateinit var accountProvider: AccountProvider
-
-    private val URL_TOS = "https://play.google.com/about/play-terms/"
-    private val URL_LICENSE = "https://gitlab.com/AuroraOSS/AuroraStore/blob/master/LICENSE"
-    private val URL_DISCLAIMER =
-        "https://gitlab.com/AuroraOSS/AuroraStore/blob/master/DISCLAIMER.md"
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

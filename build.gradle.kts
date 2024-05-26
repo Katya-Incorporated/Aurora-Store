@@ -1,7 +1,8 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *  Copyright (C) 2022, The Calyx Institute
+ *  Copyright (C) 2023, grrfe <grrfe@420blaze.it>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,11 +20,13 @@
  */
 
 plugins {
-    id("com.android.application") version "8.1.1" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.0" apply false
-    id("org.jetbrains.kotlin.plugin.parcelize") version "1.9.0" apply false
-    id("com.google.devtools.ksp") version "1.9.0-1.0.13" apply false
-    id("androidx.navigation.safeargs.kotlin") version "2.6.0" apply false
-    id("org.jlleitschuh.gradle.ktlint") version "11.4.0" apply false
-    id("dev.rikka.tools.refine") version "4.3.0" apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.jetbrains.kotlin.android) apply false
+    alias(libs.plugins.jetbrains.kotlin.compose) apply false
+    alias(libs.plugins.jetbrains.kotlin.parcelize) apply false
+    alias(libs.plugins.google.ksp) apply false
+    alias(libs.plugins.androidx.navigation) apply false
+    alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.rikka.tools.refine.plugin) apply false
+    alias(libs.plugins.hilt.android.plugin) apply false
 }

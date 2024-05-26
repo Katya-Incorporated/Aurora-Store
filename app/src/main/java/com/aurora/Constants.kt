@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,29 +20,30 @@
 package com.aurora
 
 object Constants {
-    const val INT_EXTRA = "INT_EXTRA"
-    const val FLOAT_EXTRA = "FLOAT_EXTRA"
-    const val STRING_APP = "STRING_APP"
-    const val STRING_EXTRA = "STRING_EXTRA"
-    const val BROWSE_EXTRA = "BROWSE_EXTRA"
 
-    const val FETCH_GROUP_ID = "FETCH_GROUP_ID"
+    const val PARCEL_DOWNLOAD = "PARCEL_DOWNLOAD"
+
     const val APP_ID = "com.aurora.store"
 
-    const val EXODUS_BASE_URL = "https://reports.exodus-privacy.eu.org/api/search/"
+    const val URL_TOS = "https://play.google.com/about/play-terms/"
+    const val URL_LICENSE = "https://gitlab.com/AuroraOSS/AuroraStore/blob/master/LICENSE"
+    const val URL_DISCLAIMER = "https://gitlab.com/AuroraOSS/AuroraStore/blob/master/DISCLAIMER.md"
+    const val URL_POLICY = "https://gitlab.com/AuroraOSS/AuroraStore/-/blob/master/POLICY.md"
+
+    const val EXODUS_SUBMIT_PAGE = "https://reports.exodus-privacy.eu.org/analysis/submit/#"
     const val EXODUS_REPORT_URL = "https://reports.exodus-privacy.eu.org/reports/"
     const val SHARE_URL = "https://play.google.com/store/apps/details?id="
-    const val TOS_URL = "https://github.com/sorydima/Aurora/-/blob/master/TermsOfService.md"
-    const val UPDATE_URL = "https://github.com/sorydima/Aurora/raw/master/updates.json"
+    const val UPDATE_URL = "https://gitlab.com/AuroraOSS/AuroraStore/raw/master/updates.json"
 
     const val NOTIFICATION_CHANNEL_ALERT = "NOTIFICATION_CHANNEL_ALERT"
     const val NOTIFICATION_CHANNEL_GENERAL = "NOTIFICATION_CHANNEL_GENERAL"
     const val NOTIFICATION_CHANNEL_UPDATES = "NOTIFICATION_CHANNEL_UPDATES"
     const val NOTIFICATION_CHANNEL_UPDATER_SERVICE = "NOTIFICATION_CHANNEL_UPDATER_SERVICE"
 
+    const val GITLAB_URL = "https://gitlab.com/AuroraOSS/AuroraStore"
     const val URL_DISPENSER = "https://auroraoss.com/api/auth"
 
-    const val PLAY_QUERY_URL = "https://play.google.com/store/search?q="
+    const val ANDROID_CONNECTIVITY_URL = "https://connectivitycheck.android.com/generate_204"
 
     //ACCOUNTS
     const val ACCOUNT_SIGNED_IN = "ACCOUNT_SIGNED_IN"
@@ -54,7 +55,4 @@ object Constants {
     const val PAGE_TYPE = "PAGE_TYPE"
     const val TOP_CHART_TYPE = "TOP_CHART_TYPE"
     const val TOP_CHART_CATEGORY = "TOP_CHART_CATEGORY"
-
-    //NAVIGATION
-    const val NAVIGATION_UPDATES = "NAVIGATION_UPDATES"
 }

@@ -1,9 +1,28 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.details
 
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.aurora.gplayapi.data.models.Review
@@ -14,7 +33,9 @@ import com.aurora.store.view.custom.recycler.EndlessRecyclerOnScrollListener
 import com.aurora.store.view.epoxy.views.AppProgressViewModel_
 import com.aurora.store.view.epoxy.views.details.ReviewViewModel_
 import com.aurora.store.viewmodel.review.ReviewViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class DetailsReviewFragment : Fragment(R.layout.fragment_details_review) {
 
     private var _binding: FragmentDetailsReviewBinding? = null
@@ -22,18 +43,15 @@ class DetailsReviewFragment : Fragment(R.layout.fragment_details_review) {
         get() = _binding!!
 
     private val args: DetailsReviewFragmentArgs by navArgs()
-
-    private lateinit var VM: ReviewViewModel
+    private val viewModel: ReviewViewModel by viewModels()
 
     private lateinit var endlessRecyclerOnScrollListener: EndlessRecyclerOnScrollListener
-
     private lateinit var filter: Review.Filter
     private lateinit var reviewCluster: ReviewCluster
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDetailsReviewBinding.bind(view)
-        VM = ViewModelProvider(this)[ReviewViewModel::class.java]
 
         // Toolbar
         binding.layoutToolbarActionReview.apply {
@@ -43,12 +61,12 @@ class DetailsReviewFragment : Fragment(R.layout.fragment_details_review) {
             }
         }
 
-        VM.liveData.observe(viewLifecycleOwner) {
+        viewModel.liveData.observe(viewLifecycleOwner) {
             if (!::reviewCluster.isInitialized) {
                 endlessRecyclerOnScrollListener = object : EndlessRecyclerOnScrollListener() {
                     override fun onLoadMore(currentPage: Int) {
                         if (::reviewCluster.isInitialized) {
-                            VM.next(reviewCluster.nextPageUrl)
+                            viewModel.next(reviewCluster.nextPageUrl)
                         }
                     }
                 }
@@ -63,7 +81,7 @@ class DetailsReviewFragment : Fragment(R.layout.fragment_details_review) {
 
         // Fetch Reviews
         filter = Review.Filter.ALL
-        VM.fetchReview(args.packageName, filter)
+        viewModel.fetchReview(args.packageName, filter)
 
         // Chips
         binding.chipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
@@ -79,7 +97,7 @@ class DetailsReviewFragment : Fragment(R.layout.fragment_details_review) {
             }
 
             endlessRecyclerOnScrollListener.resetPageCount()
-            VM.fetchReview(args.packageName, filter)
+            viewModel.fetchReview(args.packageName, filter)
         }
     }
 

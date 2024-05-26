@@ -1,18 +1,49 @@
-<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<!--
+  ~ Aurora Store
+  ~  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+  ~
+  ~  Aurora Store is free software: you can redistribute it and/or modify
+  ~  it under the terms of the GNU General Public License as published by
+  ~  the Free Software Foundation, either version 2 of the License, or
+  ~  (at your option) any later version.
+  ~
+  ~  Aurora Store is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU General Public License
+  ~  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+  ~
+  -->
+
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <SwitchPreferenceCompat
         app:defaultValue="false"
         app:iconSpaceReserved="false"
         app:key="PREFERENCE_UPDATES_EXTENDED"
-        app:summary="@string/pref_updates_extended_desc"
-        app:title="@string/pref_updates_extended" />
+        app:summary="@string/pref_updates_incompatible_desc"
+        app:title="@string/pref_updates_incompatible" />
 
-    <SwitchPreferenceCompat
-        app:defaultValue="true"
+    <com.aurora.store.view.custom.preference.AuroraListPreference
+        app:defaultValue="2"
+        app:entries="@array/pref_updates_auto"
+        app:entryValues="@array/pref_updates_auto_values"
         app:iconSpaceReserved="false"
-        app:key="PREFERENCE_UPDATES_CHECK"
-        app:summary="@string/pref_updates_check_desc"
-        app:title="@string/pref_updates_check" />
+        app:key="PREFERENCE_UPDATES_AUTO"
+        app:summary="@string/pref_updates_auto_desc"
+        app:title="@string/pref_updates_auto" />
 
+    <SeekBarPreference
+        android:defaultValue="3"
+        android:key="PREFERENCE_UPDATES_CHECK_INTERVAL"
+        android:max="24"
+        android:summary="@string/pref_updates_check_frequency_desc"
+        android:title="@string/pref_updates_check_frequency"
+        app:adjustable="true"
+        app:iconSpaceReserved="false"
+        app:min="1"
+        app:showSeekBarValue="true" />
 </androidx.preference.PreferenceScreen>

@@ -30,7 +30,6 @@
     <string name="account_logged_out">Вие сте излезли</string>
     <string name="account_login_using">Влизане чрез</string>
     <string name="account_logout">Излизане от Aurora</string>
-    <string name="action_accept">Приемане</string>
     <string name="action_back">Назад</string>
     <string name="action_blacklist">Черен списък</string>
     <string name="action_blacklist_add">Добавяне към черен списък</string>
@@ -39,7 +38,6 @@
     <string name="action_clear">Изчистване</string>
     <string name="action_close">Затваряне</string>
     <string name="action_copy">Копиране</string>
-    <string name="action_deny">Отказване</string>
     <string name="action_disable">Изключване</string>
     <string name="action_filter">Филтри</string>
     <string name="action_filter_all">Всички</string>
@@ -63,7 +61,6 @@
     <string name="toast_anonymous_restriction">Не е налично за анонимни акаунти</string>
     <string name="filter_review_positive">Позитивни</string>
     <string name="filter_review_two">Двойка</string>
-    <string name="pref_updates_extended_desc">Търси за нови версии и на изключени приложения</string>
     <string name="filter_review_three">Тройка</string>
     <string name="filter_review_five">Петица</string>
     <string name="filter_review_one">Единица</string>
@@ -95,7 +92,6 @@
     <string name="title_account_manager">Акаунти</string>
     <string name="title_settings">Настройки</string>
     <string name="title_updates">Актуализации</string>
-    <string name="pref_updates_extended">Разширени актуализации</string>
     <string name="title_language">Език</string>
     <string name="ui_accent_1">Син</string>
     <string name="ui_accent_7">Сив</string>
@@ -113,7 +109,6 @@
     <string name="details_no_permission">Няма разрешения</string>
     <string name="installer_status_failure">Инсталаторът е неуспешен</string>
     <string name="installer_status_failure_storage">Недостатъчно място в паметта</string>
-    <string name="pref_downloader_external">Потребителска външна памет</string>
     <string name="onboarding_permission_installer_desc">Разрешете инсталирането на приложения от Aurora Store</string>
     <string name="pref_common_extra">Екстри</string>
     <string name="details_privacy">поверителност</string>
@@ -125,10 +120,8 @@
     <string name="details_dev_address">Адрес</string>
     <string name="details_permission">разрешение</string>
     <string name="installer_status_user_action">Изчаква се потвърждение от потребителя</string>
-    <string name="onboarding_title_theme">Теми</string>
     <string name="pref_ui_theme_system">Следвайте системата</string>
     <string name="tab_editor_choice">Избор на редакторите</string>
-    <string name="download_clear_completed">Изчистването е завършено</string>
     <string name="exodus_substring">тракер(и), намерени в</string>
     <string name="download_pause_all">Пауза на всички</string>
     <string name="exodus_no_tracker">Не съдържа тракери</string>
@@ -151,8 +144,6 @@
     <string name="download_paused">На пауза • <xliff:g id="completed_downloads">%1$d</xliff:g> / <xliff:g id="all_downloads">%2$d</xliff:g></string>
     <string name="exodus_powered">Осъществено от Exodus</string>
     <string name="exodus_progress">Проверява се за тракери…</string>
-    <string name="pref_downloader_active_summary">Максимален брой активни изтегляния</string>
-    <string name="pref_downloader_external_desc">Външното хранилище се използва за изтегляния, експорти и др.</string>
     <string name="pref_filter_fdroid_summary">Премахва приложенията на F-Droid от списъците с приложения</string>
     <string name="pref_insecure_anonymous_summary">Генерирайте GSF ID локално на устройството</string>
     <string name="pref_install_mode_am">AM инсталатор.</string>
@@ -161,7 +152,6 @@
     <string name="pref_install_mode_summary">Изберете режим на инсталиране на APK</string>
     <string name="pref_ui_no_for_you_desc">Показва страници за вас на началния екран</string>
     <string name="pref_ui_similar_apps_desc">Показва подобни и свързани клъстери на страницата с подробности за приложението</string>
-    <string name="pref_advanced_search_in_ctt">Търсете в персонализирания раздел</string>
     <string name="purchase_failed">Изтеглянето се провали</string>
     <string name="purchase_unsupported">Приложението не се поддържа</string>
     <string name="purchase_not_found">Приложението не е намерено</string>
@@ -187,13 +177,9 @@
     <string name="downloading_dep">Изтегляне на допълнителни файлове за <xliff:g id="app">%1$s</xliff:g></string>
     <string name="notification_updates_available_desc_2"><xliff:g id="app_one_name">%1$s</xliff:g> и <xliff:g id="app_two_name">%2$s</xliff:g></string>
     <string name="checking_for_updates">Проверяване за актуализации</string>
-    <string name="pref_updates_check">Автоматична проверка на актуализациите</string>
-    <string name="pref_updates_check_desc">Периодично проверявайте и уведомявайте за нови актуализации на приложения</string>
     <string name="installer_am_unavailable">Инсталирайте App Manager или сменете инсталатора.</string>
-    <string name="onboarding_installer_select">Изберете подходящ инсталатор</string>
     <string name="action_pause">Пауза</string>
     <string name="details_description">Описание</string>
-    <string name="onboarding_tos_error">Първо трябва да маркирате TOS прочетени.</string>
     <string name="onboarding_welcome_select">Как си\?</string>
     <string name="toast_permission_granted">Разрешение дадено</string>
     <string name="toast_spoof_applied">Приложена е измама на устройството.</string>
@@ -210,13 +196,9 @@
     <string name="device_miui_subtitle">Програмата за инсталиране на сесии не може да инсталира приложения поради MIUI оптимизации.</string>
     <string name="notification_channel_general">Общо известие</string>
     <string name="onboarding_permission_select">Aurora Store изисква следните разрешения</string>
-    <string name="onboarding_theme_select">Изберете това, което ви харесва</string>
-    <string name="onboarding_title_accent">Акцент</string>
     <string name="onboarding_title_installer">Инсталатор</string>
     <string name="onboarding_title_permissions">Разрешения</string>
     <string name="onboarding_title_welcome">Добре дошли</string>
-    <string name="onboarding_tos_desc">Моля, прочетете нашите Условия за ползване и ги приемете, за да използвате Aurora Store.</string>
-    <string name="onboarding_tos_confirmation">Прочетох Общите условия на Aurora Store.</string>
     <string name="onboarding_permission_esa">Достъп до външно хранилище</string>
     <string name="onboarding_permission_notifications">Известия</string>
     <string name="onboarding_permission_notifications_desc">Изпращайте известия относно състоянието на инсталациите</string>
@@ -224,7 +206,6 @@
     <string name="pref_dialog_to_apply_restart">Тази настройка ще се приложи, след като рестартирате приложението</string>
     <string name="pref_filter_search_summary">Филтрите за търсене се нулират при всяко търсене. Изключете, за да запазите филтрите за търсене</string>
     <string name="pref_insecure_anonymous_title">Несигурна анонимна сесия</string>
-    <string name="pref_install_auto_summary">Приложенията се инсталират незабавно след завършване на изтеглянето</string>
     <string name="pref_install_mode_shizuku">Shizuku инсталатор</string>
     <string name="pref_install_mode_title">Метод на инсталиране</string>
     <string name="pref_ui_accent_title">Акцент</string>
@@ -276,27 +257,21 @@
     <string name="dialog_title_self_update">Налична е нова актуализация</string>
     <string name="dialog_desc_native_split">Не можете да инсталирате пакетни (разделени) приложения чрез Native Installer. Променете инсталатора си на Session, Services или Root.</string>
     <string name="notification_channel_alert">Бързо известяване</string>
-    <string name="onboarding_tos">Условия на услугите</string>
     <string name="onboarding_permission_esa_desc">За да запазите изтеглянията (APK и OBB), експортирайте и импортирайте конфигурациите на устройството към и от външно хранилище.</string>
     <string name="onboarding_permission_installer">Разрешение за инсталиране</string>
     <string name="pref_install_delete_summary">APK файловете ще бъдат изтрити по подразбиране</string>
     <string name="pref_abandon_session">Принудително изчистване на инсталационните сесии</string>
-    <string name="pref_downloader_active_title">Активно изтегляне</string>
     <string name="pref_filter_fdroid_title">Филтриране на F-Droid приложения</string>
     <string name="pref_filter_search_title">Използвайте непостоянен филтър за търсене</string>
-    <string name="pref_install_auto_title">Автоматично инсталиране на APK след изтегляне</string>
     <string name="pref_ui_theme_black">черен</string>
     <string name="pref_ui_theme_dark_x">Тъмен X</string>
     <string name="pref_filter_google_summary">Премахва всички приложения на Google от резултатите от търсенето и категоризираните приложения</string>
     <string name="pref_filter_google_title">Филтрирайте приложенията на Google</string>
     <string name="pref_install_delete_title">Изтриване на APK след инсталиране</string>
-    <string name="pref_install_profile_summary">Изберете целевия профил, в който да инсталирате приложения. Работи само с root инсталационния метод</string>
-    <string name="pref_install_profile_title">Инсталационни профили (експериментално)</string>
     <string name="pref_ui_theme_dark">Тъмно</string>
     <string name="pref_ui_theme_title">Тема</string>
     <string name="pref_ui_title">Персонализиране</string>
     <string name="pref_ui_no_for_you">Страници за вас</string>
-    <string name="pref_advanced_search_in_ctt_desc">Отваря резултатите от търсенето в персонализирания раздел на браузъра</string>
     <string name="session_init">Подготвяме нещата…</string>
     <string name="session_login_failed_google">Неуспешно влизане през Google</string>
     <string name="purchase_invalid">Приложението не е закупено</string>

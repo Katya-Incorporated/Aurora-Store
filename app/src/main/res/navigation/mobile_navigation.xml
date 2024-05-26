@@ -1,4 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Aurora Store
+  ~  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+  ~
+  ~  Aurora Store is free software: you can redistribute it and/or modify
+  ~  it under the terms of the GNU General Public License as published by
+  ~  the Free Software Foundation, either version 2 of the License, or
+  ~  (at your option) any later version.
+  ~
+  ~  Aurora Store is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU General Public License
+  ~  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+  ~
+  -->
+
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -29,6 +47,12 @@
     <action
         android:id="@+id/action_global_appMenuSheet"
         app:destination="@id/appMenuSheet" />
+    <action
+        android:id="@+id/action_global_dozeWarningSheet"
+        app:destination="@id/dozeWarningSheet" />
+    <action
+        android:id="@+id/action_global_moreDialogFragment"
+        app:destination="@id/moreDialogFragment" />
     <fragment
         android:id="@+id/appsContainerFragment"
         android:name="com.aurora.store.view.ui.apps.AppsContainerFragment"
@@ -82,11 +106,6 @@
         android:id="@+id/settingsFragment"
         android:name="com.aurora.store.view.ui.preferences.SettingsFragment"
         android:label="@string/title_settings"
-        tools:layout="@layout/fragment_setting" />
-    <fragment
-        android:id="@+id/advancedPreference"
-        android:name="com.aurora.store.view.ui.preferences.AdvancedPreference"
-        android:label="AdvancedPreference"
         tools:layout="@layout/fragment_setting" />
     <fragment
         android:id="@+id/downloadPreference"
@@ -152,9 +171,6 @@
         <argument
             android:name="packageName"
             app:argType="string" />
-        <deepLink
-            app:action="android.intent.action.VIEW"
-            app:uri="play.google.com/store/apps/details?id={packageName}" />
         <action
             android:id="@+id/action_appDetailsFragment_to_devAppsFragment"
             app:destination="@id/devAppsFragment" />
@@ -286,6 +302,9 @@
         android:name="com.aurora.store.view.ui.details.DetailsExodusFragment"
         tools:layout="@layout/activity_generic_recycler" >
         <argument
+            android:name="displayName"
+            app:argType="string" />
+        <argument
             android:name="report"
             app:argType="com.aurora.store.data.model.Report" />
     </fragment>
@@ -293,6 +312,21 @@
         android:id="@+id/splashFragment"
         android:name="com.aurora.store.view.ui.splash.SplashFragment"
         tools:layout="@layout/fragment_splash" >
+        <argument
+            android:name="packageName"
+            android:defaultValue=""
+            app:argType="string" />
+        <!-- Android Market (deprecated) -->
+        <deepLink
+            app:action="android.intent.action.VIEW"
+            app:uri="market:///details?id={packageName}" />
+        <deepLink
+            app:action="android.intent.action.VIEW"
+            app:uri="market.android.com/details?id={packageName}" />
+        <!-- Google Play (formerly Android Market) -->
+        <deepLink
+            app:action="android.intent.action.VIEW"
+            app:uri="play.google.com/store/apps/details?id={packageName}" />
         <action
             android:id="@+id/action_splashFragment_to_navigation_apps"
             app:destination="@id/appsContainerFragment"
@@ -320,6 +354,12 @@
         <action
             android:id="@+id/action_splashFragment_to_googleFragment"
             app:destination="@id/googleFragment" />
+        <action
+            android:id="@+id/action_splashFragment_to_appDetailsFragment"
+            app:destination="@id/appDetailsFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/mobile_navigation"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/googleFragment"
@@ -348,15 +388,12 @@
             app:launchSingleTop="true"
             app:popUpTo="@id/mobile_navigation"
             app:popUpToInclusive="true" />
-        <action
-            android:id="@+id/action_onboardingFragment_to_deviceMiuiSheet"
-            app:destination="@id/deviceMiuiSheet" />
     </fragment>
-    <dialog
-        android:id="@+id/TOSSheet"
-        android:name="com.aurora.store.view.ui.sheets.TOSSheet"
-        android:label="TOSSheet"
-        tools:layout="@layout/sheet_tos" />
+    <fragment
+        android:id="@+id/installerFragment"
+        android:name="com.aurora.store.view.ui.preferences.InstallerFragment"
+        android:label="InstallerFragment"
+        tools:layout="@layout/fragment_installer"/>
     <dialog
         android:id="@+id/appMenuSheet"
         android:name="com.aurora.store.view.ui.sheets.AppMenuSheet"
@@ -402,8 +439,8 @@
         android:label="DownloadMenuSheet"
         tools:layout="@layout/sheet_download_menu">
         <argument
-            android:name="downloadFile"
-            app:argType="com.aurora.store.data.model.DownloadFile" />
+            android:name="download"
+            app:argType="com.aurora.store.data.room.download.Download" />
     </dialog>
     <dialog
         android:id="@+id/deviceMiuiSheet"
@@ -428,4 +465,18 @@
             android:name="extra"
             app:argType="string" />
     </dialog>
+    <dialog
+        android:id="@+id/dozeWarningSheet"
+        android:name="com.aurora.store.view.ui.sheets.DozeWarningSheet"
+        android:label="DozeWarningSheet"
+        tools:layout="@layout/sheet_doze_warning">
+        <argument
+            android:name="enableAutoUpdate"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </dialog>
+    <dialog
+        android:id="@+id/moreDialogFragment"
+        android:name="com.aurora.store.view.ui.commons.MoreDialogFragment"
+        android:label="MoreDialogFragment" />
 </navigation>

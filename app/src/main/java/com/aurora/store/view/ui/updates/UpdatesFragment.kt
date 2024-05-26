@@ -1,191 +1,191 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.updates
 
 import android.Manifest
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
-import android.os.IBinder
-import android.provider.Settings
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import com.aurora.Constants
+import com.aurora.extensions.browse
 import com.aurora.extensions.isRAndAbove
 import com.aurora.extensions.toast
 import com.aurora.gplayapi.data.models.App
+import com.aurora.store.MobileNavigationDirections
 import com.aurora.store.R
-import com.aurora.store.State
-import com.aurora.store.data.downloader.getGroupId
-import com.aurora.store.data.model.UpdateFile
-import com.aurora.store.data.service.UpdateService
+import com.aurora.store.data.event.BusEvent
+import com.aurora.store.data.room.download.Download
 import com.aurora.store.databinding.FragmentUpdatesBinding
+import com.aurora.store.util.PackageUtil
 import com.aurora.store.util.PathUtil
-import com.aurora.store.util.isExternalStorageEnable
 import com.aurora.store.view.epoxy.views.UpdateHeaderViewModel_
 import com.aurora.store.view.epoxy.views.app.AppUpdateViewModel_
 import com.aurora.store.view.epoxy.views.app.NoAppViewModel_
 import com.aurora.store.view.epoxy.views.shimmer.AppListViewShimmerModel_
 import com.aurora.store.view.ui.commons.BaseFragment
 import com.aurora.store.viewmodel.all.UpdatesViewModel
-import com.tonyodev.fetch2.AbstractFetchGroupListener
-import com.tonyodev.fetch2.Download
-import com.tonyodev.fetch2.FetchGroup
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 
-class UpdatesFragment : BaseFragment() {
+@AndroidEntryPoint
+class UpdatesFragment : BaseFragment(R.layout.fragment_updates) {
 
-    private lateinit var B: FragmentUpdatesBinding
-    private lateinit var VM: UpdatesViewModel
     private lateinit var app: App
+
+    private var _binding: FragmentUpdatesBinding? = null
+    private val binding get() = _binding!!
+
+    private val viewModel: UpdatesViewModel by viewModels()
 
     private val startForStorageManagerResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (isRAndAbove() && Environment.isExternalStorageManager()) {
-                updateSingle(app)
+                viewModel.download(app)
             } else {
                 toast(R.string.permissions_denied)
             }
         }
     private val startForPermissions =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { perm ->
-            if (perm) updateSingle(app) else toast(R.string.permissions_denied)
+            if (perm) viewModel.download(app) else toast(R.string.permissions_denied)
         }
 
-    val listOfActionsWhenServiceAttaches = ArrayList<Runnable>()
-    private lateinit var fetchListener: AbstractFetchGroupListener
-
-    private var updateService: UpdateService? = null
-    private var attachToServiceCalled = false
-    private var serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            updateService = (binder as UpdateService.UpdateServiceBinder).getUpdateService()
-            updateService!!.registerFetchListener(fetchListener)
-            if (listOfActionsWhenServiceAttaches.isNotEmpty()) {
-                val iterator = listOfActionsWhenServiceAttaches.iterator()
-                while (iterator.hasNext()) {
-                    val next = iterator.next()
-                    next.run()
-                    iterator.remove()
-                }
-            }
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            updateService = null
-            attachToServiceCalled = false
-        }
-    }
-
-    private var updateFileMap: MutableMap<Int, UpdateFile> = mutableMapOf()
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        B = FragmentUpdatesBinding.bind(
-            inflater.inflate(
-                R.layout.fragment_updates,
-                container,
-                false
-            )
-        )
-
-        VM = ViewModelProvider(requireActivity()).get(UpdatesViewModel::class.java)
-
-
-        fetchListener = object : AbstractFetchGroupListener() {
-
-            override fun onAdded(groupId: Int, download: Download, fetchGroup: FetchGroup) {
-                VM.updateDownload(groupId, fetchGroup)
-            }
-
-            override fun onProgress(
-                groupId: Int,
-                download: Download,
-                etaInMilliSeconds: Long,
-                downloadedBytesPerSecond: Long,
-                fetchGroup: FetchGroup
-            ) {
-                VM.updateDownload(groupId, fetchGroup)
-            }
-
-            override fun onCompleted(groupId: Int, download: Download, fetchGroup: FetchGroup) {
-                if (fetchGroup.groupDownloadProgress == 100) {
-                    VM.updateDownload(groupId, fetchGroup, isComplete = true)
-                }
-            }
-
-            override fun onCancelled(groupId: Int, download: Download, fetchGroup: FetchGroup) {
-                VM.updateDownload(groupId, fetchGroup, isCancelled = true)
-            }
-
-            override fun onDeleted(groupId: Int, download: Download, fetchGroup: FetchGroup) {
-                VM.updateDownload(groupId, fetchGroup, isCancelled = true)
-            }
-        }
-
-        getUpdateServiceInstance()
-
-        return B.root
-    }
-
-    override fun onResume() {
-        getUpdateServiceInstance()
-        super.onResume()
-    }
-
-    override fun onPause() {
-        if (updateService != null) {
-            updateService = null
-            attachToServiceCalled = false
-            requireContext().unbindService(serviceConnection)
-        }
-        super.onPause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (updateService != null) {
-            updateService = null
-            attachToServiceCalled = false
-            requireContext().unbindService(serviceConnection)
-        }
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        _binding = FragmentUpdatesBinding.bind(view)
 
-        VM.liveUpdateData.observe(viewLifecycleOwner) {
-            updateFileMap = it
-            updateController(updateFileMap)
-            B.swipeRefreshLayout.isRefreshing = false
-            updateService?.liveUpdateData?.postValue(updateFileMap)
+        // Toolbar
+        binding.toolbar.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.menu_download_manager -> {
+                    findNavController().navigate(R.id.downloadFragment)
+                }
+                R.id.menu_more -> {
+                    findNavController().navigate(
+                        MobileNavigationDirections.actionGlobalMoreDialogFragment()
+                    )
+                }
+            }
+            true
         }
 
-        B.swipeRefreshLayout.setOnRefreshListener {
-            VM.observe()
+        viewModel.observe()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.updates.combine(viewModel.downloadsList) { uList, dList ->
+                uList?.associateWith { a ->
+                    dList.find { it.packageName == a.packageName && it.versionCode == a.versionCode }
+                }
+            }.collectLatest { map ->
+                updateController(map)
+                binding.swipeRefreshLayout.isRefreshing = false
+                viewModel.updateAllEnqueued = map?.values?.all { it?.isRunning == true } ?: false
+
+                if (!map.isNullOrEmpty()) {
+                    binding.updateFab.apply {
+                        visibility = View.VISIBLE
+                        if (viewModel.updateAllEnqueued) {
+                            setImageDrawable(
+                                ContextCompat.getDrawable(
+                                    requireContext(),
+                                    R.drawable.ic_cancel
+                                )
+                            )
+                        } else {
+                            setImageDrawable(
+                                ContextCompat.getDrawable(
+                                    requireContext(),
+                                    R.drawable.ic_installation
+                                )
+                            )
+                        }
+                        setOnClickListener {
+                            if (viewModel.updateAllEnqueued) {
+                                cancelAll()
+                            } else {
+                                map.keys.forEach { updateSingle(it, true) }
+                            }
+                            binding.recycler.requestModelBuild()
+                        }
+                    }
+                } else {
+                    binding.updateFab.visibility = View.GONE
+                }
+            }
+        }
+
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.observe()
         }
 
         updateController(null)
     }
 
-    private fun updateController(updateFileMap: MutableMap<Int, UpdateFile>?) {
-        B.recycler.withModels {
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    override fun onStop() {
+        EventBus.getDefault().unregister(this)
+        super.onStop()
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEventMainThread(event: Any) {
+        when (event) {
+            is BusEvent.InstallEvent, is BusEvent.UninstallEvent -> {
+                viewModel.observe()
+            }
+
+            else -> {}
+        }
+    }
+
+    private fun updateController(appList: Map<App, Download?>?) {
+        binding.recycler.withModels {
             setFilterDuplicates(true)
-            if (updateFileMap == null) {
-                for (i in 1..6) {
+            if (appList == null) {
+                for (i in 1..10) {
                     add(
                         AppListViewShimmerModel_()
                             .id(i)
                     )
                 }
             } else {
-                if (updateFileMap.isEmpty()) {
+                if (appList.isEmpty()) {
                     add(
                         NoAppViewModel_()
                             .id("no_update")
@@ -196,118 +196,79 @@ class UpdatesFragment : BaseFragment() {
                     add(
                         UpdateHeaderViewModel_()
                             .id("header_all")
-                            .title("${updateFileMap.size} " +
-                                if (updateFileMap.size == 1)
-                                    getString(R.string.update_available)
-                                else
-                                    getString(R.string.updates_available)
+                            .title(
+                                "${appList.size} " +
+                                        if (appList.size == 1)
+                                            getString(R.string.update_available)
+                                        else
+                                            getString(R.string.updates_available)
                             )
-                            .action(
-                                if (VM.updateAllEnqueued)
-                                    getString(R.string.action_cancel)
-                                else
-                                    getString(R.string.action_update_all)
-                            )
+                            .action(getString(R.string.action_manage))
                             .click { _ ->
-                                if (VM.updateAllEnqueued)
-                                    cancelAll()
-                                else
-                                    updateFileMap.values.forEach { updateSingle(it.app, true) }
-
-                                requestModelBuild()
+                                findNavController().navigate(R.id.blacklistFragment)
                             }
                     )
 
-                    updateFileMap.values.forEach { updateFile ->
+                    for ((app, download) in appList) {
                         add(
                             AppUpdateViewModel_()
-                                .id(updateFile.hashCode())
-                                .updateFile(updateFile)
-                                .click { _ -> openDetailsFragment(updateFile.app) }
-                                .longClick { _ ->
-                                    openAppMenuSheet(updateFile.app)
-                                    false
-                                }
-                                .positiveAction { _ -> updateSingle(updateFile.app) }
-                                .negativeAction { _ -> cancelSingle(updateFile.app) }
-                                .installAction { _ ->
-                                    updateFile.group?.downloads?.let {
-                                        VM.install(requireContext(), updateFile.app.packageName, it)
+                                .id(app.packageName)
+                                .app(app)
+                                .download(download)
+                                .click { _ ->
+                                    if (app.packageName == Constants.APP_ID) {
+                                        requireContext().browse(Constants.GITLAB_URL)
+                                    } else {
+                                        openDetailsFragment(app.packageName, app)
                                     }
                                 }
-                                .state(updateFile.state)
+                                .longClick { _ ->
+                                    openAppMenuSheet(app)
+                                    false
+                                }
+                                .positiveAction { _ -> updateSingle(app) }
+                                .negativeAction { _ -> cancelSingle(app) }
                         )
                     }
                 }
             }
-        }
-    }
-
-    fun runInService(runnable: Runnable) {
-        if (updateService == null) {
-            listOfActionsWhenServiceAttaches.add(runnable)
-            getUpdateServiceInstance()
-        } else {
-            runnable.run()
         }
     }
 
     private fun updateSingle(app: App, updateAll: Boolean = false) {
         this.app = app
-        runInService {
-            VM.updateState(app.getGroupId(requireContext()), State.QUEUED)
-            VM.updateAllEnqueued = updateAll
+        viewModel.updateAllEnqueued = updateAll
 
-            if (PathUtil.needsStorageManagerPerm(app.fileList) ||
-                requireContext().isExternalStorageEnable()) {
-                if (isRAndAbove()) {
-                    if (!Environment.isExternalStorageManager()) {
-                        startForStorageManagerResult.launch(
-                            Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                        )
-                    } else {
-                        updateService?.updateApp(app)
-                    }
+        if (PathUtil.needsStorageManagerPerm(app.fileList)) {
+            if (isRAndAbove()) {
+                if (!Environment.isExternalStorageManager()) {
+                    startForStorageManagerResult.launch(
+                        PackageUtil.getStorageManagerIntent(requireContext())
+                    )
                 } else {
-                    if (ContextCompat.checkSelfPermission(
-                            requireContext(),
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        updateService?.updateApp(app)
-                    } else {
-                        startForPermissions.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    }
+                    viewModel.download(app)
                 }
             } else {
-                updateService?.updateApp(app)
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    viewModel.download(app)
+                } else {
+                    startForPermissions.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
             }
+        } else {
+            viewModel.download(app)
         }
     }
 
     private fun cancelSingle(app: App) {
-        runInService {
-            updateService?.fetch?.cancelGroup(app.getGroupId(requireContext()))
-        }
+        viewModel.cancelDownload(app)
     }
 
     private fun cancelAll() {
-        runInService {
-            VM.updateAllEnqueued = false
-            updateFileMap.values.forEach { updateService?.fetch?.cancelGroup(it.app.getGroupId(requireContext())) }
-        }
-    }
-
-    fun getUpdateServiceInstance() {
-        if (updateService == null && !attachToServiceCalled) {
-            attachToServiceCalled = true
-            val intent = Intent(requireContext(), UpdateService::class.java)
-            requireContext().startService(intent)
-            requireContext().bindService(
-                intent,
-                serviceConnection,
-                0
-            )
-        }
+        viewModel.cancelAll()
     }
 }

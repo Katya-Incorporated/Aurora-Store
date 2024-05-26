@@ -1,9 +1,29 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.viewmodel.auth
 
-import android.app.Application
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aurora.Constants
 import com.aurora.gplayapi.data.models.AuthData
@@ -14,7 +34,6 @@ import com.aurora.gplayapi.helpers.AuthValidator
 import com.aurora.store.AccountType
 import com.aurora.store.R
 import com.aurora.store.data.AuthState
-import com.aurora.store.data.RequestState
 import com.aurora.store.data.event.BusEvent
 import com.aurora.store.data.model.InsecureAuth
 import com.aurora.store.data.network.HttpClient
@@ -24,7 +43,9 @@ import com.aurora.store.data.providers.SpoofProvider
 import com.aurora.store.util.AC2DMTask
 import com.aurora.store.util.Preferences
 import com.aurora.store.util.Preferences.PREFERENCE_AUTH_DATA
-import com.aurora.store.viewmodel.BaseAndroidViewModel
+import com.google.gson.Gson
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -32,22 +53,24 @@ import org.greenrobot.eventbus.EventBus
 import java.net.ConnectException
 import java.net.UnknownHostException
 import java.util.*
+import javax.inject.Inject
 
-class AuthViewModel(application: Application) : BaseAndroidViewModel(application) {
+@HiltViewModel
+@SuppressLint("StaticFieldLeak") // false positive, see https://github.com/google/dagger/issues/3253
+class AuthViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val gson: Gson
+) : ViewModel() {
 
     private val TAG = AuthViewModel::class.java.simpleName
 
-    private val spoofProvider = SpoofProvider(getApplication())
+    private val spoofProvider = SpoofProvider(context)
 
     val liveData: MutableLiveData<AuthState> = MutableLiveData()
 
-    init {
-        requestState = RequestState.Init
-    }
-
-    override fun observe() {
+    fun observe() {
         if (liveData.value != AuthState.Fetching) {
-            val signedIn = Preferences.getBoolean(getApplication(), Constants.ACCOUNT_SIGNED_IN)
+            val signedIn = Preferences.getBoolean(context, Constants.ACCOUNT_SIGNED_IN)
             if (signedIn) {
                 liveData.postValue(AuthState.Available)
                 buildSavedAuthData()
@@ -61,7 +84,7 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
         liveData.postValue(AuthState.Fetching)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                var properties = NativeDeviceInfoProvider(getApplication()).getNativeDeviceProperties()
+                var properties = NativeDeviceInfoProvider(context).getNativeDeviceProperties()
                 if (spoofProvider.isDeviceSpoofEnabled())
                     properties = spoofProvider.getSpoofDeviceProperties()
 
@@ -69,9 +92,7 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
                 verifyAndSaveAuth(authData, AccountType.GOOGLE)
             } catch (exception: Exception) {
                 liveData.postValue(
-                    AuthState.Failed(
-                        (getApplication() as Context).getString(R.string.failed_to_generate_session)
-                    )
+                    AuthState.Failed(context.getString(R.string.failed_to_generate_session))
                 )
                 Log.e(TAG, "Failed to generate Session", exception)
             }
@@ -79,30 +100,24 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
     }
 
     fun buildAnonymousAuthData() {
-        val insecure = Preferences.getBoolean(
-            getApplication(),
-            Preferences.PREFERENCE_INSECURE_ANONYMOUS
-        )
-
-        if (insecure) {
+        if (Preferences.getBoolean(context, Preferences.PREFERENCE_INSECURE_ANONYMOUS)) {
             buildInSecureAnonymousAuthData()
         } else {
             buildSecureAnonymousAuthData()
         }
     }
 
-    private fun buildSecureAnonymousAuthData() {
+    fun buildSecureAnonymousAuthData() {
         liveData.postValue(AuthState.Fetching)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                var properties = NativeDeviceInfoProvider(getApplication())
-                    .getNativeDeviceProperties()
+                var properties = NativeDeviceInfoProvider(context).getNativeDeviceProperties()
 
                 if (spoofProvider.isDeviceSpoofEnabled())
                     properties = spoofProvider.getSpoofDeviceProperties()
 
                 val playResponse = HttpClient
-                    .getPreferredClient()
+                    .getPreferredClient(context)
                     .postAuth(
                         Constants.URL_DISPENSER,
                         gson.toJson(properties).toByteArray()
@@ -118,7 +133,7 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
                     authData.isAnonymous = true
                     verifyAndSaveAuth(authData, AccountType.ANONYMOUS)
                 } else {
-                    throwError(playResponse, getApplication())
+                    throwError(playResponse, context)
                 }
             } catch (exception: Exception) {
                 liveData.postValue(AuthState.Failed(exception.message.toString()))
@@ -131,17 +146,15 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
         liveData.postValue(AuthState.Fetching)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                var properties = NativeDeviceInfoProvider(getApplication())
+                var properties = NativeDeviceInfoProvider(context)
                     .getNativeDeviceProperties()
 
                 if (spoofProvider.isDeviceSpoofEnabled())
                     properties = spoofProvider.getSpoofDeviceProperties()
 
                 val playResponse = HttpClient
-                    .getPreferredClient()
-                    .getAuth(
-                        Constants.URL_DISPENSER
-                    )
+                    .getPreferredClient(context)
+                    .getAuth(Constants.URL_DISPENSER)
 
                 if (playResponse.isSuccessful) {
                     val insecureAuth = gson.fromJson(
@@ -162,7 +175,7 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
                     authData.isAnonymous = true
                     verifyAndSaveAuth(authData, AccountType.ANONYMOUS)
                 } else {
-                    throwError(playResponse, getApplication())
+                    throwError(playResponse, context)
                 }
             } catch (exception: Exception) {
                 liveData.postValue(AuthState.Failed(exception.message.toString()))
@@ -205,18 +218,17 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
 
                     if (isValid(savedAuthData)) {
                         liveData.postValue(AuthState.Valid)
-                        requestState = RequestState.Complete
                     } else {
                         //Generate and validate new auth
-                        val type = AccountProvider.with(getApplication()).getAccountType()
+                        val type = AccountProvider.with(context).getAccountType()
                         when (type) {
                             AccountType.GOOGLE -> {
                                 val email = Preferences.getString(
-                                    getApplication(),
+                                    context,
                                     Constants.ACCOUNT_EMAIL_PLAIN
                                 )
                                 val aasToken = Preferences.getString(
-                                    getApplication(),
+                                    context,
                                     Constants.ACCOUNT_AAS_PLAIN
                                 )
                                 buildGoogleAuthData(email, aasToken)
@@ -229,24 +241,23 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
                 } catch (e: Exception) {
                     val error = when (e) {
                         is UnknownHostException -> {
-                            (getApplication() as Context).getString(R.string.title_no_network)
+                            context.getString(R.string.title_no_network)
                         }
                         is ConnectException -> {
-                            (getApplication() as Context).getString(R.string.server_unreachable)
+                            context.getString(R.string.server_unreachable)
                         }
                         else -> {
-                            (getApplication() as Context).getString(R.string.bad_request)
+                            context.getString(R.string.bad_request)
                         }
                     }
                     liveData.postValue(AuthState.Failed(error))
-                    requestState = RequestState.Pending
                 }
             }
         }
     }
 
     private fun getSavedAuthData(): AuthData {
-        val rawAuth: String = Preferences.getString(getApplication(), PREFERENCE_AUTH_DATA)
+        val rawAuth: String = Preferences.getString(context, PREFERENCE_AUTH_DATA)
         return if (rawAuth.isNotBlank())
             gson.fromJson(rawAuth, AuthData::class.java)
         else
@@ -256,7 +267,7 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
     private fun isValid(authData: AuthData): Boolean {
         return try {
             AuthValidator(authData)
-                .using(HttpClient.getPreferredClient())
+                .using(HttpClient.getPreferredClient(context))
                 .isValid()
         } catch (e: Exception) {
             false
@@ -272,19 +283,33 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
             authData.locale = Locale.getDefault()
         }
 
+        val versionId =
+            Preferences.getInteger(context, Preferences.PREFERENCE_VENDING_VERSION)
+        if (versionId != 0) {
+            val resources = context.resources
+
+            authData.deviceInfoProvider?.properties?.let {
+                it.setProperty(
+                    "Vending.version",
+                    resources.getStringArray(R.array.pref_vending_version_codes)[versionId]
+                )
+
+                it.setProperty(
+                    "Vending.versionString",
+                    resources.getStringArray(R.array.pref_vending_version)[versionId]
+                )
+            }
+        }
+
         if (authData.authToken.isNotEmpty() && authData.deviceConfigToken.isNotEmpty()) {
             configAuthPref(authData, type, true)
             liveData.postValue(AuthState.SignedIn)
-            requestState = RequestState.Complete
         } else {
             configAuthPref(authData, type, false)
             liveData.postValue(AuthState.SignedOut)
-            requestState = RequestState.Pending
 
             liveData.postValue(
-                AuthState.Failed(
-                    (getApplication() as Context).getString(R.string.failed_to_generate_session)
-                )
+                AuthState.Failed(context.getString(R.string.failed_to_generate_session))
             )
         }
     }
@@ -292,22 +317,14 @@ class AuthViewModel(application: Application) : BaseAndroidViewModel(application
     private fun configAuthPref(authData: AuthData, type: AccountType, signedIn: Boolean) {
         if (signedIn) {
             //Save Auth Data
-            Preferences.putString(
-                getApplication(),
-                PREFERENCE_AUTH_DATA,
-                gson.toJson(authData)
-            )
+            Preferences.putString(context, PREFERENCE_AUTH_DATA, gson.toJson(authData))
         }
 
         //Save Auth Type
-        Preferences.putString(
-            getApplication(),
-            Constants.ACCOUNT_TYPE,
-            type.name  // ANONYMOUS OR GOOGLE
-        )
+        Preferences.putString(context, Constants.ACCOUNT_TYPE, type.name)
 
         //Save Auth Status
-        Preferences.putBoolean(getApplication(), Constants.ACCOUNT_SIGNED_IN, signedIn)
+        Preferences.putBoolean(context, Constants.ACCOUNT_SIGNED_IN, signedIn)
     }
 
     @Throws(Exception::class)

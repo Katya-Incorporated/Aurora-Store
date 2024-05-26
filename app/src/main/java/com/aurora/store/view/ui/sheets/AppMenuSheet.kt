@@ -1,20 +1,31 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *  Copyright (C) 2022, The Calyx Institute
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.sheets
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
-import com.aurora.extensions.isRAndAbove
 import com.aurora.extensions.openInfo
 import com.aurora.extensions.toast
 import com.aurora.store.R
@@ -24,40 +35,43 @@ import com.aurora.store.data.providers.BlacklistProvider
 import com.aurora.store.databinding.SheetAppMenuBinding
 import com.aurora.store.util.PackageUtil
 import com.aurora.store.viewmodel.sheets.SheetsViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
 
-class AppMenuSheet : BaseBottomSheet() {
+@AndroidEntryPoint
+class AppMenuSheet : BottomSheetDialogFragment(R.layout.sheet_app_menu) {
 
-    private lateinit var B: SheetAppMenuBinding
+    companion object {
+        const val TAG = "APP_MENU_SHEET"
+    }
+
+    private var _binding: SheetAppMenuBinding? = null
+    private val binding get() = _binding!!
 
     private val viewModel: SheetsViewModel by viewModels()
     private val args: AppMenuSheetArgs by navArgs()
 
-    private val startForPermissions =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            if (it) {
-                viewModel.copyApk(requireContext(), args.app.packageName)
+    private val exportMimeType = "application/zip"
+
+    private val requestDocumentCreation =
+        registerForActivityResult(ActivityResultContracts.CreateDocument(exportMimeType)) {
+            if (it != null) {
+                viewModel.copyInstalledApp(requireContext(), args.app.packageName, it)
             } else {
-                toast(R.string.permissions_denied)
+                toast(R.string.failed_apk_export)
             }
+            dismissAllowingStateLoss()
         }
 
-    override fun onCreateContentView(
-        inflater: LayoutInflater,
-        container: ViewGroup,
-        savedInstanceState: Bundle?
-    ): View {
-        B = SheetAppMenuBinding.inflate(layoutInflater)
-        return B.root
-    }
-
-    override fun onContentViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        _binding = SheetAppMenuBinding.bind(view)
 
         val blacklistProvider = BlacklistProvider.with(requireContext())
         val isBlacklisted: Boolean = blacklistProvider.isBlacklisted(args.app.packageName)
 
-        with(B.navigationView) {
+        with(binding.navigationView) {
             //Switch strings for Add/Remove Blacklist
             val blackListMenu: MenuItem = menu.findItem(R.id.action_blacklist)
             blackListMenu.setTitle(
@@ -84,50 +98,32 @@ class AppMenuSheet : BaseBottomSheet() {
                             requireContext().toast(R.string.toast_apk_blacklisted)
                         }
 
+                        dismissAllowingStateLoss()
                         EventBus.getDefault()
                             .post(BusEvent.Blacklisted(args.app.packageName, ""))
                     }
 
                     R.id.action_local -> {
-                        export()
+                        requestDocumentCreation.launch("${args.app.packageName}.zip")
                     }
 
                     R.id.action_uninstall -> {
-                        AppInstaller.getInstance(requireContext())
-                            .getPreferredInstaller().uninstall(args.app.packageName)
+                        AppInstaller.uninstall(requireContext(), args.app.packageName)
+                        dismissAllowingStateLoss()
                     }
 
                     R.id.action_info -> {
                         requireContext().openInfo(args.app.packageName)
+                        dismissAllowingStateLoss()
                     }
                 }
-                dismissAllowingStateLoss()
                 false
             }
         }
     }
 
-    private fun export() {
-        if (isRAndAbove()) {
-            if (!Environment.isExternalStorageManager()) {
-                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
-            } else {
-                viewModel.copyApk(requireContext(), args.app.packageName)
-            }
-        } else {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                viewModel.copyApk(requireContext(), args.app.packageName)
-            } else {
-                startForPermissions.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-        }
-    }
-
-    companion object {
-        const val TAG = "APP_MENU_SHEET"
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

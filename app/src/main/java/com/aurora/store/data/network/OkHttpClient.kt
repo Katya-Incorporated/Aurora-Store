@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@
 package com.aurora.store.data.network
 
 import com.aurora.gplayapi.data.models.PlayResponse
-import com.aurora.gplayapi.network.IHttpClient
 import com.aurora.store.BuildConfig
+import com.aurora.store.data.model.ProxyInfo
 import com.aurora.store.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,9 +32,11 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.util.concurrent.TimeUnit
 
-object OkHttpClient : IHttpClient {
+object OkHttpClient : IProxyHttpClient {
 
     private const val POST = "POST"
     private const val GET = "GET"
@@ -43,15 +45,42 @@ object OkHttpClient : IHttpClient {
     override val responseCode: StateFlow<Int>
         get() = _responseCode.asStateFlow()
 
-    private val okHttpClient = OkHttpClient().newBuilder()
+    private var okHttpClient = OkHttpClient()
+    private val okHttpClientBuilder = OkHttpClient().newBuilder()
         .connectTimeout(25, TimeUnit.SECONDS)
         .readTimeout(25, TimeUnit.SECONDS)
         .writeTimeout(25, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .followRedirects(true)
         .followSslRedirects(true)
-        .build()
 
+    override fun setProxy(proxyInfo: ProxyInfo): OkHttpClient {
+        val proxy = Proxy(
+            if (proxyInfo.protocol == "SOCKS") Proxy.Type.SOCKS else Proxy.Type.HTTP,
+            InetSocketAddress.createUnresolved(proxyInfo.host, proxyInfo.port)
+        )
+
+        val proxyUser = proxyInfo.proxyUser
+        val proxyPassword = proxyInfo.proxyPassword
+
+        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+            okHttpClientBuilder.proxyAuthenticator { _, response ->
+                if (response.request.header("Proxy-Authorization") != null) {
+                    return@proxyAuthenticator null
+                }
+
+                val credential = Credentials.basic(proxyUser, proxyPassword)
+                response.request
+                    .newBuilder()
+                    .header("Proxy-Authorization", credential)
+                    .build()
+            }
+        }
+
+        okHttpClientBuilder.proxy(proxy)
+        okHttpClient = okHttpClientBuilder.build()
+        return this
+    }
 
     @Throws(IOException::class)
     fun post(url: String, headers: Map<String, String>, requestBody: RequestBody): PlayResponse {

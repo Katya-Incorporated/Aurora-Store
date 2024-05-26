@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,21 +19,21 @@
 
 package com.aurora.store.data.receiver
 
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.aurora.store.BuildConfig
-import com.aurora.store.data.downloader.RequestGroupIdBuilder
 import com.aurora.store.data.event.BusEvent.InstallEvent
 import com.aurora.store.data.event.BusEvent.UninstallEvent
 import com.aurora.store.data.installer.AppInstaller
-import com.aurora.store.util.PathUtil
-import com.aurora.store.util.Preferences
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.greenrobot.eventbus.EventBus
-import java.io.File
 
+@AndroidEntryPoint
 open class PackageManagerReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var appInstaller: AppInstaller
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != null && intent.data != null) {
@@ -50,43 +50,7 @@ open class PackageManagerReceiver : BroadcastReceiver() {
             }
 
             //Clear installation queue
-            AppInstaller.getInstance(context)
-                .getPreferredInstaller()
-                .removeFromInstallQueue(packageName)
-
-            //clearNotification(context, packageName)
-
-            val isAutoDeleteAPKEnabled = Preferences.getBoolean(
-                context,
-                Preferences.PREFERENCE_AUTO_DELETE
-            )
-
-            if (isAutoDeleteAPKEnabled)
-                clearDownloads(context, packageName)
-
-            //Clear self update apk
-            if (packageName == BuildConfig.APPLICATION_ID)
-                clearDownloads(context, packageName)
-        }
-    }
-
-    private fun clearNotification(context: Context, packageName: String) {
-        val notificationManager = context.applicationContext
-            .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val groupIDsOfPackageName = RequestGroupIdBuilder.getGroupIDsForApp(context, packageName.hashCode())
-        groupIDsOfPackageName.forEach {
-            notificationManager.cancel(packageName, it)
-        }
-    }
-
-    private fun clearDownloads(context: Context, packageName: String) {
-        try {
-            val rootDirPath = PathUtil.getPackageDirectory(context, packageName)
-            val rootDir = File(rootDirPath)
-            if (rootDir.exists())
-                rootDir.deleteRecursively()
-        } catch (e: Exception) {
-
+            appInstaller.getPreferredInstaller().removeFromInstallQueue(packageName)
         }
     }
 }

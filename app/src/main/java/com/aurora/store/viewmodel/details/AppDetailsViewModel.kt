@@ -9,20 +9,25 @@ import com.aurora.gplayapi.data.models.Review
 import com.aurora.gplayapi.data.models.details.TestingProgramStatus
 import com.aurora.gplayapi.helpers.AppDetailsHelper
 import com.aurora.gplayapi.helpers.ReviewsHelper
-import com.aurora.store.data.installer.AppInstaller
 import com.aurora.store.data.model.ExodusReport
 import com.aurora.store.data.model.Report
 import com.aurora.store.data.network.HttpClient
 import com.aurora.store.data.providers.AuthProvider
+import com.aurora.store.util.DownloadWorkerUtil
 import com.google.gson.GsonBuilder
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.lang.reflect.Modifier
+import javax.inject.Inject
 
-class AppDetailsViewModel : ViewModel() {
+@HiltViewModel
+class AppDetailsViewModel @Inject constructor(
+    private val downloadWorkerUtil: DownloadWorkerUtil
+) : ViewModel() {
 
     private val TAG = AppDetailsViewModel::class.java.simpleName
 
@@ -44,12 +49,14 @@ class AppDetailsViewModel : ViewModel() {
     private val _testingProgramStatus = MutableSharedFlow<TestingProgramStatus?>()
     val testingProgramStatus = _testingProgramStatus.asSharedFlow()
 
+    val downloadsList get() = downloadWorkerUtil.downloadsList
+
     fun fetchAppDetails(context: Context, packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val authData = AuthProvider.with(context).getAuthData()
                 _app.emit(
-                    AppDetailsHelper(authData).using(HttpClient.getPreferredClient())
+                    AppDetailsHelper(authData).using(HttpClient.getPreferredClient(context))
                         .getAppByPackageName(packageName)
                 )
             } catch (exception: Exception) {
@@ -63,7 +70,7 @@ class AppDetailsViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val authData = AuthProvider.with(context).getAuthData()
-                _reviews.emit(ReviewsHelper(authData).using(HttpClient.getPreferredClient())
+                _reviews.emit(ReviewsHelper(authData).using(HttpClient.getPreferredClient(context))
                     .getReviewSummary(packageName))
             } catch (exception: Exception) {
                 Log.e(TAG, "Failed to fetch app reviews", exception)
@@ -77,7 +84,7 @@ class AppDetailsViewModel : ViewModel() {
             try {
                 val authData = AuthProvider.with(context).getAuthData()
                 _userReview.emit(ReviewsHelper(authData)
-                    .using(HttpClient.getPreferredClient())
+                    .using(HttpClient.getPreferredClient(context))
                     .addOrEditReview(
                         packageName,
                         review.title,
@@ -93,7 +100,7 @@ class AppDetailsViewModel : ViewModel() {
     }
 
 
-    fun fetchAppReport(packageName: String) {
+    fun fetchAppReport(context: Context,packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val headers: MutableMap<String, String> = mutableMapOf()
@@ -102,7 +109,7 @@ class AppDetailsViewModel : ViewModel() {
                 headers["Authorization"] = exodusApiKey
 
                 val url = exodusBaseUrl + packageName
-                val playResponse = HttpClient.getPreferredClient().get(url, headers)
+                val playResponse = HttpClient.getPreferredClient(context).get(url, headers)
 
                 _report.emit(parseResponse(String(playResponse.responseBytes), packageName)[0])
             } catch (exception: Exception) {
@@ -129,16 +136,12 @@ class AppDetailsViewModel : ViewModel() {
         }
     }
 
-    @Synchronized
-    fun install(context: Context, packageName: String, files: List<Any>) {
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
-                AppInstaller.getInstance(context).getPreferredInstaller()
-                    .install(packageName, files)
-            }
-        } catch (exception: Exception) {
-            Log.e(TAG, "Failed to install app", exception)
-        }
+    fun download(app: App) {
+        viewModelScope.launch { downloadWorkerUtil.enqueueApp(app) }
+    }
+
+    fun cancelDownload(app: App) {
+        viewModelScope.launch { downloadWorkerUtil.cancelDownload(app.packageName) }
     }
 
     private fun parseResponse(response: String, packageName: String): List<Report> {

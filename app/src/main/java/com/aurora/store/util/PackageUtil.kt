@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,12 +26,18 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PackageInfoFlags
 import android.content.pm.SharedLibraryInfo
-import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
+import androidx.annotation.RequiresApi
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.core.graphics.drawable.toBitmap
+import com.aurora.extensions.getInstallerPackageNameCompat
 import com.aurora.extensions.isOAndAbove
+import com.aurora.extensions.isPAndAbove
 import com.aurora.extensions.isTAndAbove
-
+import com.aurora.store.BuildConfig
 
 object PackageUtil {
 
@@ -53,14 +59,29 @@ object PackageUtil {
         }
     }
 
+    fun isSharedLibrary(context: Context, packageName: String): Boolean {
+        return if (isOAndAbove()) {
+            getAllSharedLibraries(context).any { it.name == packageName }
+        } else {
+            false
+        }
+    }
+
     fun isSharedLibraryInstalled(context: Context, packageName: String, versionCode: Int): Boolean {
-        if (isOAndAbove()) {
+        return if (isOAndAbove()) {
             val sharedLibraries = getAllSharedLibraries(context)
-            return sharedLibraries.any {
-                it.name == packageName && it.version == versionCode
+            if (isPAndAbove()) {
+                sharedLibraries.any {
+                    it.name == packageName && it.longVersion == versionCode.toLong()
+                }
+            } else {
+                sharedLibraries.any {
+                    @Suppress("DEPRECATION")
+                    it.name == packageName && it.version == versionCode
+                }
             }
         } else {
-            return false
+            false
         }
     }
 
@@ -83,8 +104,7 @@ object PackageUtil {
     }
 
     fun isTv(context: Context): Boolean {
-        val uiMode = context.resources.configuration.uiMode
-        return uiMode and Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
     }
 
     fun getLaunchIntent(context: Context, packageName: String?): Intent? {
@@ -102,6 +122,18 @@ object PackageUtil {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun getStorageManagerIntent(context: Context): Intent {
+        return if (isTv(context)) {
+            Intent(
+                Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+            )
+        } else {
+            Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+        }
+    }
+
     @Throws(Exception::class)
     fun getPackageInfo(context: Context, packageName: String, flags: Int = 0): PackageInfo {
         return if (isTAndAbove()) {
@@ -111,6 +143,21 @@ object PackageUtil {
             )
         } else {
             context.packageManager.getPackageInfo(packageName, flags)
+        }
+    }
+
+    fun getIconForPackage(context: Context, packageName: String): Bitmap? {
+        return try {
+            val packageInfo = context.packageManager.getPackageInfo(packageName, 0)
+            val icon = packageInfo.applicationInfo.loadIcon(context.packageManager)
+            if (icon.intrinsicWidth > 0 && icon.intrinsicHeight > 0) {
+                icon.toBitmap(96, 96)
+            } else {
+                context.packageManager.defaultActivityIcon.toBitmap(96, 96)
+            }
+        } catch (exception: Exception) {
+            Log.e("Failed to get icon for package!", exception)
+            null
         }
     }
 
@@ -124,26 +171,24 @@ object PackageUtil {
         }
     }
 
-    fun getAllPackages(context: Context): List<PackageInfo> {
-        val packageInfoSet: MutableList<PackageInfo> = mutableListOf()
-        val packageManager: PackageManager = context.packageManager
-        val flags: Int = getAllFlags()
-        val packageInfoList: List<PackageInfo> = packageManager.getInstalledPackages(flags)
-        for (packageInfo in packageInfoList) {
-            if (packageInfo.packageName != null && packageInfo.applicationInfo != null) {
-                packageInfoSet.add(packageInfo)
-            }
-        }
-        return packageInfoSet
-    }
-
     fun getPackageInfoMap(context: Context): MutableMap<String, PackageInfo> {
         val packageInfoSet: MutableMap<String, PackageInfo> = mutableMapOf()
         val packageManager: PackageManager = context.packageManager
         val flags: Int = PackageManager.GET_META_DATA
         var packageInfoList: List<PackageInfo> = packageManager.getInstalledPackages(flags)
 
-        val isFdroidFilterEnabled = Preferences.getBoolean(
+        val isGoogleFilterEnabled = Preferences.getBoolean(
+            context,
+            Preferences.PREFERENCE_FILTER_GOOGLE
+        )
+
+        val isAuroraOnlyUpdateEnabled = Preferences.getBoolean(
+            context,
+            Preferences.PREFERENCE_FILTER_AURORA_ONLY,
+            false
+        )
+
+        val isFDroidFilterEnabled = Preferences.getBoolean(
             context,
             Preferences.PREFERENCE_FILTER_FDROID
         )
@@ -157,18 +202,45 @@ object PackageUtil {
             it.packageName != null && it.applicationInfo != null
         }
 
+        /*Filter google apps*/
+        if (isGoogleFilterEnabled) {
+            packageInfoList = packageInfoList
+                .filter {
+                    !listOf(
+                        "com.chrome.beta",
+                        "com.chrome.canary",
+                        "com.chrome.dev",
+                        "com.android.chrome",
+                        "com.niksoftware.snapseed",
+                        "com.google.toontastic",
+                    ).contains(it.packageName)
+                }.filter {
+                    it.packageName?.contains("com.google") == false
+                }
+        }
+
+        /*Select only Aurora STore installed apps*/
+        if (isAuroraOnlyUpdateEnabled) {
+            packageInfoList = packageInfoList
+                .filter {
+                    val packageInstaller = packageManager.getInstallerPackageNameCompat(it.packageName)
+                    listOf(
+                        "com.aurora.store",
+                        "com.aurora.store.nightly",
+                        "com.aurora.services"
+                    ).contains(packageInstaller)
+                }
+        }
+
         if (!isExtendedUpdateEnabled) {
             packageInfoList = packageInfoList.filter { it.applicationInfo.enabled }
         }
 
-        if (isFdroidFilterEnabled) {
-            packageInfoList = packageInfoList
-                .filter {
-                    val packageInstaller = packageManager.getInstallerPackageName(it.packageName)
-                    packageInstaller != "org.fdroid.fdroid.privileged"
-                }.filter {
-                    !CertUtil.isFDroidApp(context, it.packageName)
-                }
+        /*Filter F-Droid apps*/
+        if (isFDroidFilterEnabled) {
+            packageInfoList = packageInfoList.filter {
+                !CertUtil.isFDroidApp(context, it.packageName)
+            }
         }
 
         packageInfoList.forEach {
@@ -182,21 +254,10 @@ object PackageUtil {
     fun getFilter(): IntentFilter {
         val filter = IntentFilter()
         filter.addDataScheme("package")
+        @Suppress("DEPRECATION")
         filter.addAction(Intent.ACTION_PACKAGE_INSTALL)
         filter.addAction(Intent.ACTION_PACKAGE_ADDED)
         filter.addAction(Intent.ACTION_PACKAGE_REMOVED)
         return filter
-    }
-
-    private fun getAllFlags(): Int {
-        var flags = (PackageManager.GET_META_DATA)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            flags = flags or PackageManager.GET_DISABLED_COMPONENTS
-            flags = flags or PackageManager.GET_UNINSTALLED_PACKAGES
-        } else {
-            flags = flags or PackageManager.MATCH_DISABLED_COMPONENTS
-            flags = flags or PackageManager.MATCH_UNINSTALLED_PACKAGES
-        }
-        return flags
     }
 }

@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 
 package com.aurora.store.data.installer
 
-interface IInstaller {
-    fun install(packageName: String, files: List<Any>)
-    fun uninstall(packageName: String)
+import com.aurora.store.data.room.download.Download
 
+interface IInstaller {
+    fun install(download: Download)
     fun clearQueue()
     fun isAlreadyQueued(packageName: String): Boolean
     fun removeFromInstallQueue(packageName: String)

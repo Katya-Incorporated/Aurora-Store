@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import com.aurora.gplayapi.data.models.StreamCluster
 import com.aurora.store.R
 import com.aurora.store.view.epoxy.groups.CarouselModelGroup
 import com.aurora.store.view.epoxy.groups.CarouselShimmerGroup
-import com.aurora.store.view.epoxy.views.AppProgressViewModel_
 import com.aurora.store.view.epoxy.views.app.AppListViewModel_
 import com.aurora.store.view.epoxy.views.app.NoAppViewModel_
 
@@ -50,7 +49,7 @@ open class GenericCarouselController(private val callbacks: Callbacks) :
     override fun buildModels(streamBundle: StreamBundle?) {
         setFilterDuplicates(true)
         if (streamBundle == null) {
-            for (i in 1..2) {
+            for (i in 1..4) {
                 add(
                     CarouselShimmerGroup()
                         .id(i)
@@ -93,7 +92,7 @@ open class GenericCarouselController(private val callbacks: Callbacks) :
                 }
                 if (streamBundle.hasNext())
                     add(
-                        AppProgressViewModel_()
+                        CarouselShimmerGroup()
                             .id("progress")
                     )
             }

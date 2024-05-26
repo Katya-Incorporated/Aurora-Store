@@ -1,4 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Aurora Store
+  ~  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+  ~  Copyright (C) 2023, grrfe <grrfe@420blaze.it>
+  ~
+  ~  Aurora Store is free software: you can redistribute it and/or modify
+  ~  it under the terms of the GNU General Public License as published by
+  ~  the Free Software Foundation, either version 2 of the License, or
+  ~  (at your option) any later version.
+  ~
+  ~  Aurora Store is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU General Public License
+  ~  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+  ~
+  -->
+
 <resources>
     <array name="auto_size_text_sizes">
         <item>12sp</item>
@@ -91,22 +110,16 @@
         <item>13</item>
     </string-array>
 
-    <string-array name="pref_installation_method">
-        <item>@string/pref_install_mode_session</item>
-        <item>@string/pref_install_mode_native</item>
-        <item>@string/pref_install_mode_root</item>
-        <item>@string/pref_install_mode_services</item>
-        <item>@string/pref_install_mode_am</item>
-        <item>@string/pref_install_mode_shizuku</item>
-    </string-array>
-
-    <string-array name="pref_installation_method_values">
+    <string-array name="pref_updates_auto_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
+    </string-array>
+
+    <string-array name="pref_updates_auto">
+        <item>@string/pref_updates_auto_off</item>
+        <item>@string/pref_updates_auto_notify</item>
+        <item>@string/pref_updates_auto_install</item>
     </string-array>
 
     <string-array name="link_urls">
@@ -204,5 +217,23 @@
         <item> > 10 M </item>
         <item> > 50 M </item>
         <item> > 100 M </item>
+    </string-array>
+
+    <string-array name="pref_vending_version" translatable="false">
+        <item>@string/pref_vending_version_device</item>
+        <item>7.9.80.Q-all [0] [PR] 159305549</item>
+        <item>22.0.17-21 [0] [PR] 332555730</item>
+    </string-array>
+
+    <string-array name="pref_vending_version_codes" translatable="false">
+        <item>-1</item>
+        <item>80798000</item>
+        <item>82201710</item>
+    </string-array>
+
+    <string-array name="pref_vending_version_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 </resources>

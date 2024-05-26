@@ -1,14 +1,32 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.games
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.aurora.gplayapi.data.models.AuthData
+import com.aurora.store.MobileNavigationDirections
 import com.aurora.store.R
 import com.aurora.store.data.providers.AuthProvider
 import com.aurora.store.databinding.FragmentAppsGamesBinding
@@ -19,50 +37,52 @@ import com.aurora.store.view.ui.commons.ForYouFragment
 import com.aurora.store.view.ui.commons.TopChartContainerFragment
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
+class GamesContainerFragment : Fragment(R.layout.fragment_apps_games) {
 
-class GamesContainerFragment : Fragment() {
-
-    private lateinit var B: FragmentAppsGamesBinding
-    private lateinit var authData: AuthData
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        B = FragmentAppsGamesBinding.bind(
-            inflater.inflate(
-                R.layout.fragment_apps_games,
-                container,
-                false
-            )
-        )
-        return B.root
-    }
+    private var _binding: FragmentAppsGamesBinding? = null
+    private val binding get() = _binding!!
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        authData = AuthProvider.with(requireContext()).getAuthData()
-        setupViewPager()
-    }
+        _binding = FragmentAppsGamesBinding.bind(view)
 
-    private fun setupViewPager() {
+        // Toolbar
+        binding.toolbar.apply {
+            title = getString(R.string.title_games)
+            setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.menu_download_manager -> {
+                        findNavController().navigate(R.id.downloadFragment)
+                    }
+                    R.id.menu_more -> {
+                        findNavController().navigate(
+                            MobileNavigationDirections.actionGlobalMoreDialogFragment()
+                        )
+                    }
+                }
+                true
+            }
+        }
+
+        // ViewPager
         val isForYouEnabled = Preferences.getBoolean(
             requireContext(),
             Preferences.PREFERENCE_FOR_YOU
         )
 
-        val isGoogleAccount = !authData.isAnonymous
+        val isGoogleAccount = !AuthProvider.with(requireContext()).getAuthData().isAnonymous
 
-        B.pager.adapter = ViewPagerAdapter(
+        binding.pager.adapter = ViewPagerAdapter(
             childFragmentManager,
-            lifecycle,
+            viewLifecycleOwner.lifecycle,
             isGoogleAccount,
             isForYouEnabled
         )
 
-        B.pager.isUserInputEnabled = false
+        binding.pager.isUserInputEnabled = false
 
         val tabTitles: MutableList<String> = mutableListOf<String>().apply {
             if (isForYouEnabled) {
@@ -77,9 +97,23 @@ class GamesContainerFragment : Fragment() {
             }
         }
 
-        TabLayoutMediator(B.tabLayout, B.pager, true) { tab: TabLayout.Tab, position: Int ->
+        TabLayoutMediator(
+            binding.tabLayout,
+            binding.pager,
+            true
+        ) { tab: TabLayout.Tab, position: Int ->
             tab.text = tabTitles[position]
         }.attach()
+
+        binding.searchFab.setOnClickListener {
+            findNavController().navigate(R.id.searchSuggestionFragment)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding.pager.adapter = null
+        _binding = null
     }
 
     internal class ViewPagerAdapter(

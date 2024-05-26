@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,11 @@
 package com.aurora.store.util
 
 import android.content.Context
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.aurora.extensions.isSAndAbove
 import com.aurora.store.R
+import com.aurora.store.data.model.ProxyInfo
 import java.text.DecimalFormat
 import java.util.Locale
 import kotlin.math.ln
@@ -82,9 +85,11 @@ object CommonUtil {
             hours > 0 -> {
                 context.getString(R.string.download_eta_hrs, hours, minutes, seconds)
             }
+
             minutes > 0 -> {
                 context.getString(R.string.download_eta_min, minutes, seconds)
             }
+
             else -> {
                 context.getString(R.string.download_eta_sec, seconds)
             }
@@ -126,9 +131,11 @@ object CommonUtil {
             mb >= 1 -> {
                 context.getString(R.string.download_speed_mb, decimalFormat.format(mb))
             }
+
             kb >= 1 -> {
                 context.getString(R.string.download_speed_kb, decimalFormat.format(kb))
             }
+
             else -> {
                 context.getString(R.string.download_speed_bytes, downloadedBytesPerSecond)
             }
@@ -178,5 +185,34 @@ object CommonUtil {
             13 -> R.style.Accent13
             else -> if (isSAndAbove()) R.style.Accent00 else R.style.Accent01
         }
+    }
+
+    fun parseProxyUrl(proxyUrl: String): ProxyInfo? {
+        val pattern = """^(https?|socks)://(?:([^\s:@]+):([^\s:@]+)@)?([^\s:@]+):(\d+)$""".toRegex()
+        val match = pattern.find(proxyUrl)
+
+        return when {
+            match != null -> {
+                val protocol = match.groupValues[1].uppercase()
+                val username = match.groupValues[2]
+                val password = match.groupValues[3]
+                val url = match.groupValues[4]
+                val port = match.groupValues[5]
+
+                ProxyInfo(
+                    protocol,
+                    url,
+                    port.toInt(),
+                    username,
+                    password
+                )
+            }
+
+            else -> null
+        }
+    }
+
+    fun inForeground(): Boolean {
+        return ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)
     }
 }

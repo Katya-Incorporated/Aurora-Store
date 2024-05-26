@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- *  Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,16 +28,14 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.LayoutInflater
-import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityOptionsCompat
-import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.navigation.NavDeepLinkBuilder
 import com.aurora.Constants
 import com.aurora.gplayapi.data.models.App
 import com.aurora.store.MainActivity
@@ -79,14 +77,15 @@ fun Context.browse(url: String, showOpenInAuroraAction: Boolean = false) {
 
 fun Context.share(app: App) {
     try {
-        ShareCompat.IntentBuilder(this as AppCompatActivity)
-            .setType("text/plain")
-            .setChooserTitle(getString(R.string.action_share))
-            .setSubject(app.displayName)
-            .setText(Constants.SHARE_URL + app.packageName)
-            .startChooser()
-    } catch (e: Exception) {
-
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_SUBJECT, app.displayName)
+            putExtra(Intent.EXTRA_TEXT, "${Constants.SHARE_URL}${app.packageName}")
+            type = "text/plain"
+        }
+        startActivity(Intent.createChooser(sendIntent, getString(R.string.action_share)))
+    } catch (exception: Exception) {
+        Log.e("Failed to share app", exception)
     }
 }
 
@@ -175,4 +174,12 @@ fun Context.accentColor(): Int {
         else -> if (isSAndAbove()) R.color.colorAccent else R.color.colorAccent01
     }
     return ContextCompat.getColor(this, color)
+}
+
+fun Context.isIgnoringBatteryOptimizations(): Boolean {
+    return if (isMAndAbove()) {
+        (getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(packageName)
+    } else {
+        true
+    }
 }

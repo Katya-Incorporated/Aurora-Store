@@ -30,14 +30,12 @@
     <string name="action_filter">Filtriloj</string>
     <string name="action_export">Elporti</string>
     <string name="action_disable">Malŝalti</string>
-    <string name="action_deny">Malkonsenti</string>
     <string name="action_copy_link">Kopii ligilon</string>
     <string name="action_copy">Kopii</string>
     <string name="action_close">Fermi</string>
     <string name="action_check">Kontroli</string>
     <string name="action_cancel">Nuligi</string>
     <string name="action_back">Reen</string>
-    <string name="action_accept">Akcepti</string>
     <string name="account_logout">Elsaluti el Aurora</string>
     <string name="account_login_using">Ensaluti per</string>
     <string name="account_anonymous">Anonima</string>
@@ -114,19 +112,15 @@
     <string name="dialog_title_self_update">Nova ĝisdatigo disponeblas</string>
     <string name="notification_channel_alert">Rapida sciigo</string>
     <string name="notification_channel_general">Ĝenerala sciigo</string>
-    <string name="onboarding_theme_select">Elekti kian vi volas</string>
-    <string name="onboarding_title_accent">Emfazo</string>
     <string name="onboarding_title_welcome">Bonvenon</string>
     <string name="onboarding_welcome_select">Kiel vi fartas\?</string>
     <string name="onboarding_permission_installer">Instalila permeso</string>
     <string name="pref_app_download">Elŝutoj</string>
-    <string name="pref_downloader_active_title">Aktiva elŝuto</string>
     <string name="pref_filter_fdroid_summary">Forigas F-Droid aplikaĵojn el aplikaĵlistoj</string>
     <string name="pref_filter_fdroid_title">Filtri F-Droid aplikaĵojn</string>
     <string name="pref_filter_google_summary">Forigas ĉiujn Googlajn aplikaĵojn el serĉrezultoj kaj kategoriaj aplikaĵoj</string>
     <string name="pref_filter_google_title">Filtri Googlajn aplikaĵojn</string>
     <string name="pref_insecure_anonymous_title">Nesekura anonima seanco</string>
-    <string name="pref_install_auto_title">Aŭtomate instali APKoj post elŝuto</string>
     <string name="pref_install_delete_summary">APKojn detektos defaŭlte</string>
     <string name="pref_install_delete_title">Forigi APK post instalado</string>
     <string name="pref_install_mode_native">Operaciuma instalilo</string>
@@ -159,7 +153,6 @@
     <string name="details_changelog_unavailable">Ŝanĝprotokolo ne provizita</string>
     <string name="installer_status_failure">Intalilo fiaskis</string>
     <string name="installer_status_success">Sukcese instalita</string>
-    <string name="onboarding_title_theme">Etosoj</string>
     <string name="onboarding_title_installer">Instalilo</string>
     <string name="onboarding_title_permissions">Permesoj</string>
     <string name="pref_ui_theme_light">Luma</string>
@@ -185,4 +178,7 @@
     <string name="details_beta_available">Ĉu aniĝi betan programon\?</string>
     <string name="details_no_permission">Sen permesoj</string>
     <string name="about_gitlab_summary">Akiri la Aurora Store fontkodon el Aurora OSS ĉe GitLab.</string>
+    <string name="app_links_desc">Lasu Aurora Store malfermi apogitajn ligilojn</string>
+    <string name="action_import">Enporti</string>
+    <string name="action_enable">Ŝalti</string>
 </resources>

@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,11 +21,6 @@ package com.aurora.store.data.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import java.text.DateFormat
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Locale
-
 data class ExodusReport(
     val creator: String = String(),
     val name: String = String(),
@@ -41,20 +36,7 @@ data class Report(
     val updatedAt: String = String(),
     val versionCode: String = String(),
     val trackers: List<Int> = listOf()
-) : Parcelable {
-
-    fun getFormattedCreationDate(): String {
-        return try {
-            val simpleDateFormat: DateFormat = SimpleDateFormat(
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                Locale.getDefault()
-            )
-            simpleDateFormat.parse(creationDate).toString()
-        } catch (e: ParseException) {
-            ""
-        }
-    }
-}
+) : Parcelable
 
 data class ExodusTracker(
     var id: Int = 0,

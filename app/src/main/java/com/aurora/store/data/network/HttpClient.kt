@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,11 +19,29 @@
 
 package com.aurora.store.data.network
 
-import com.aurora.gplayapi.network.IHttpClient
+import android.content.Context
+import com.aurora.store.data.model.ProxyInfo
+import com.aurora.store.util.Log
+import com.aurora.store.util.Preferences
+import com.google.gson.Gson
 
 object HttpClient {
+    fun getPreferredClient(context: Context): IProxyHttpClient {
+        val proxyEnabled = Preferences.getBoolean(context, Preferences.PREFERENCE_PROXY_ENABLED)
+        val proxyInfoString = Preferences.getString(context, Preferences.PREFERENCE_PROXY_INFO)
 
-    fun getPreferredClient(): IHttpClient {
-        return OkHttpClient
+        return if (proxyEnabled && proxyInfoString.isNotBlank() && proxyInfoString != "{}") {
+            val proxyInfo = Gson().fromJson(proxyInfoString, ProxyInfo::class.java)
+
+            if (proxyInfo != null) {
+                OkHttpClient.setProxy(proxyInfo)
+            } else {
+                Log.e("Proxy info is unavailable, using default client")
+                OkHttpClient
+            }
+        } else {
+            Log.i("Proxy is disabled")
+            OkHttpClient
+        }
     }
 }

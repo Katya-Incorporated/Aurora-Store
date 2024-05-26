@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,40 +22,37 @@ package com.aurora.store.util
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.util.Log
 import com.aurora.store.util.PackageUtil.getPackageInfo
 import java.io.File
-import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-class ApkCopier(private val context: Context, private val packageName: String) {
+object ApkCopier {
 
-    fun copy() {
-        val destination = File(PathUtil.getBaseCopyDirectory())
+    private const val TAG = "ApkCopier"
 
-        destination.let {
-            if (it.exists()) {
-                Log.i("Base copy directory is available")
-            } else {
-                it.mkdirs()
-                Log.e("Base copy directory is created : ${it.path}")
-            }
-        }
-
+    fun copyInstalledApp(context: Context, packageName: String, uri: Uri) {
         val packageInfo = getPackageInfo(context, packageName, PackageManager.GET_META_DATA)
-
         val baseApk = getBaseApk(packageInfo)
         val fileList: MutableList<File?> = mutableListOf()
 
         /*Add base APK*/
         fileList.add(baseApk)
 
-        val splitSourceDirs = packageInfo.applicationInfo.splitSourceDirs
-        if (splitSourceDirs != null && splitSourceDirs.isNotEmpty()) {
-            /*Add Split APKs*/
+        if (!packageInfo.applicationInfo.splitSourceDirs.isNullOrEmpty()) {
             fileList.addAll(getSplitAPKs(packageInfo))
         }
-        bundleAllAPKs(fileList)
+        bundleAllAPKs(context, fileList.filterNotNull(), uri)
+    }
+
+    fun copyDownloadedApp(context: Context, packageName: String, versionCode: Int, uri: Uri) {
+        return bundleAllAPKs(
+            context,
+            PathUtil.getAppDownloadDir(context, packageName, versionCode).listFiles()!!.toList(),
+            uri
+        )
     }
 
     private fun getBaseApk(packageInfo: PackageInfo?): File? {
@@ -75,25 +72,22 @@ class ApkCopier(private val context: Context, private val packageName: String) {
         return fileList
     }
 
-    private fun bundleAllAPKs(fileList: List<File?>) {
+    private fun bundleAllAPKs(context: Context, fileList: List<File>, uri: Uri) {
         try {
-            val fileOutputStream =
-                FileOutputStream(PathUtil.getBaseCopyDirectory() + "$packageName.zip")
-            val zipOutputStream = ZipOutputStream(fileOutputStream)
+            val zipOutputStream = ZipOutputStream(context.contentResolver.openOutputStream(uri))
 
-            for (file in fileList) {
-                file?.inputStream()?.use {
+            fileList.forEach {  file ->
+                file.inputStream().use { output ->
                     val zipEntry = ZipEntry(file.name)
                     zipOutputStream.putNextEntry(zipEntry)
-                    it.copyTo(zipOutputStream)
+                    output.copyTo(zipOutputStream)
                     zipOutputStream.closeEntry()
                 }
             }
 
             zipOutputStream.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("ApkCopier : %s", e.message)
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to copy app bundles", exception)
         }
     }
 }

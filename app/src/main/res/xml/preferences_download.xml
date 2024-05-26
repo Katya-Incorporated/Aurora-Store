@@ -1,12 +1,24 @@
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<!--
+  ~ Aurora Store
+  ~  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+  ~
+  ~  Aurora Store is free software: you can redistribute it and/or modify
+  ~  it under the terms of the GNU General Public License as published by
+  ~  the Free Software Foundation, either version 2 of the License, or
+  ~  (at your option) any later version.
+  ~
+  ~  Aurora Store is distributed in the hope that it will be useful,
+  ~  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~  GNU General Public License for more details.
+  ~
+  ~  You should have received a copy of the GNU General Public License
+  ~  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+  ~
+  -->
 
-    <SwitchPreferenceCompat
-        app:defaultValue="false"
-        app:iconSpaceReserved="false"
-        app:key="PREFERENCE_DOWNLOAD_EXTERNAL"
-        app:summary="@string/pref_downloader_external_desc"
-        app:title="@string/pref_downloader_external" />
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <SwitchPreferenceCompat
         app:defaultValue="true"
@@ -16,13 +28,14 @@
         app:title="@string/pref_install_delete_title" />
 
     <SeekBarPreference
-        android:defaultValue="3"
-        android:key="PREFERENCE_DOWNLOAD_ACTIVE"
-        android:max="12"
-        android:summary="@string/pref_downloader_active_summary"
-        android:title="@string/pref_downloader_active_title"
+        android:defaultValue="6"
+        android:key="PREFERENCE_DOWNLOADS_CACHE_TIME"
+        android:max="24"
+        android:summary="@string/pref_download_cache_summary"
+        android:title="@string/pref_download_cache_title"
         app:adjustable="true"
         app:iconSpaceReserved="false"
         app:min="1"
         app:showSeekBarValue="true" />
+
 </androidx.preference.PreferenceScreen>

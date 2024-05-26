@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@ import com.aurora.gplayapi.data.models.StreamCluster
 import com.aurora.store.R
 import com.aurora.store.util.Log
 import com.aurora.store.view.epoxy.controller.GenericCarouselController
-import com.aurora.store.view.epoxy.views.AppProgressViewModel_
 import com.aurora.store.view.epoxy.views.HeaderViewModel_
 import com.aurora.store.view.epoxy.views.app.AppViewModel_
+import com.aurora.store.view.epoxy.views.shimmer.AppViewShimmerModel_
 
 class CarouselModelGroup(
     streamCluster: StreamCluster,
@@ -85,7 +85,7 @@ class CarouselModelGroup(
 
             if (streamCluster.hasNext()) {
                 clusterViewModels.add(
-                    AppProgressViewModel_()
+                    AppViewShimmerModel_()
                         .id("${idPrefix}_progress")
                 )
             }

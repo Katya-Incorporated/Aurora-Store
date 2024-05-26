@@ -1,3 +1,22 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.details
 
 import android.os.Bundle
@@ -18,8 +37,10 @@ import com.aurora.store.view.epoxy.views.details.InfoViewModel_
 import com.aurora.store.view.epoxy.views.details.MoreBadgeViewModel_
 import com.aurora.store.view.ui.commons.BaseFragment
 import com.aurora.store.viewmodel.details.DetailsMoreViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class DetailsMoreFragment : BaseFragment(R.layout.fragment_details_more) {
 
     private var _binding: FragmentDetailsMoreBinding? = null
@@ -27,7 +48,6 @@ class DetailsMoreFragment : BaseFragment(R.layout.fragment_details_more) {
         get() = _binding!!
 
     private val viewModel: DetailsMoreViewModel by viewModels()
-
     private val args: DetailsMoreFragmentArgs by navArgs()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,7 +72,7 @@ class DetailsMoreFragment : BaseFragment(R.layout.fragment_details_more) {
                                 AppDependentViewModel_()
                                     .id(it.id)
                                     .app(it)
-                                    .click { _ -> openDetailsFragment(it) }
+                                    .click { _ -> openDetailsFragment(it.packageName, it) }
                             )
                         }
                     }

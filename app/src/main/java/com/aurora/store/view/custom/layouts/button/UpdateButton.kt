@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import android.widget.RelativeLayout
 import com.aurora.extensions.getString
 import com.aurora.extensions.runOnUiThread
 import com.aurora.store.R
-import com.aurora.store.State
+import com.aurora.store.data.model.DownloadStatus
 import com.aurora.store.databinding.ViewUpdateButtonBinding
 
 class UpdateButton : RelativeLayout {
@@ -72,12 +72,11 @@ class UpdateButton : RelativeLayout {
         B.btnPositive.text = getString(text)
     }
 
-    fun updateState(state: State) {
-        val displayChild = when (state) {
-            State.IDLE, State.CANCELED -> 0
-            State.QUEUED -> 1
-            State.PROGRESS -> 2
-            State.COMPLETE -> 3
+    fun updateState(downloadStatus: DownloadStatus) {
+        val displayChild = when (downloadStatus) {
+            DownloadStatus.QUEUED,
+            DownloadStatus.DOWNLOADING -> 2
+            else -> 0
         }
 
         if (B.viewFlipper.displayedChild != displayChild) {
@@ -93,9 +92,5 @@ class UpdateButton : RelativeLayout {
 
     fun addNegativeOnClickListener(onClickListener: OnClickListener?) {
         B.btnNegative.setOnClickListener(onClickListener)
-    }
-
-    fun addInstallOnClickListener(onClickListener: OnClickListener?) {
-        B.btnInstall.setOnClickListener(onClickListener)
     }
 }

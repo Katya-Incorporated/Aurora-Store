@@ -1,0 +1,15 @@
+• Zielvorgabe Android 13
+• Die Lokalisierung mehrerer Zeichenfolgen aktiviert
+• Monochromes Symbol für Android 13 hinzugefügt
+• Abhängigkeiten auf die neueste Version aktualisiert
+• Beim Start wird sofort die Aufforderung zu den Nutzungsbedingungen angezeigt
+• Die Ersteinrichtung ohne Erteilen von Berechtigungen ermöglicht
+• System-XML-Denylist wird standardmäßig gelesen, um Updates auszuschließen
+• Der korrekte Titel wird nun auf der 5. Setup-Seite angezeigt
+• Die Vorwärts-Schaltfläche im Setup aktiviert, wenn man zurückgeht
+• Kontrollkästchen im Setup-Installationsprogramm durch Optionsfelder ersetzt
+• Strichfarbe wird für den Hintergrund der Setup-Registerkarten verwendet
+• Den No-Theme-Fehler im Setup mithilfe von Optionsfeldern behoben
+• Keine neuen GSF- & Vending-Versionen verwendet
+• Einrichtung von Refactor-Speicherberechtigungen
+• Übersetzungsaktualisierungen

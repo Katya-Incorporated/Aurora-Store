@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,33 +22,49 @@ package com.aurora.store.data.installer
 import android.content.Context
 import com.aurora.store.R
 import com.aurora.store.data.event.InstallerEvent
+import com.aurora.store.data.model.InstallerInfo
+import com.aurora.store.data.room.download.Download
 import com.aurora.store.util.Log
+import com.aurora.store.util.PackageUtil.isSharedLibraryInstalled
 import com.topjohnwu.superuser.Shell
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.greenrobot.eventbus.EventBus
-import java.io.File
 import java.util.regex.Pattern
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class RootInstaller(context: Context) : InstallerBase(context) {
+@Singleton
+class RootInstaller @Inject constructor(
+    @ApplicationContext context: Context
+) : InstallerBase(context) {
 
-    override fun install(packageName: String, files: List<Any>) {
-        if (isAlreadyQueued(packageName)) {
-            Log.i("$packageName already queued")
+    companion object {
+
+        fun getInstallerInfo(context: Context): InstallerInfo {
+            return InstallerInfo(
+                id = 2,
+                title = context.getString(R.string.pref_install_mode_root),
+                subtitle = context.getString(R.string.root_installer_subtitle),
+                description = context.getString(R.string.root_installer_desc)
+            )
+        }
+    }
+
+    override fun install(download: Download) {
+        if (isAlreadyQueued(download.packageName)) {
+            Log.i("${download.packageName} already queued")
         } else {
             if (Shell.getShell().isRoot) {
-                files.map {
-                    when (it) {
-                        is File -> it
-                        is String -> File(it)
-                        else -> {
-                            throw Exception("Invalid data, expecting listOf() File or String")
-                        }
+                download.sharedLibs.forEach {
+                    // Shared library packages cannot be updated
+                    if (!isSharedLibraryInstalled(context, it.packageName, it.versionCode)) {
+                        xInstall(download.packageName, download.versionCode, it.packageName)
                     }
-                }.let {
-                    xInstall(packageName, it)
                 }
+                xInstall(download.packageName, download.versionCode)
             } else {
                 postError(
-                    packageName,
+                    download.packageName,
                     context.getString(R.string.installer_status_failure),
                     context.getString(R.string.installer_root_unavailable)
                 )
@@ -57,34 +73,10 @@ class RootInstaller(context: Context) : InstallerBase(context) {
         }
     }
 
-    override fun uninstall(packageName: String) {
-        if (Shell.getShell().isRoot) {
-            val result: Shell.Result =
-                Shell.cmd("pm uninstall --user 0 $packageName")
-                    .exec()
-            val response = result.out
-
-            if (response[0] != "Success") {
-                postError(
-                    packageName,
-                    context.getString(R.string.installer_status_failure),
-                    parseError(result)
-                )
-            }
-        } else {
-            postError(
-                packageName,
-                context.getString(R.string.installer_status_failure),
-                context.getString(R.string.installer_root_unavailable)
-            )
-            Log.e(" >>>>>>>>>>>>>>>>>>>>>>>>>> NO ROOT ACCESS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-        }
-    }
-
-    private fun xInstall(packageName: String, files: List<File>) {
+    private fun xInstall(packageName: String, versionCode: Int, sharedLibPkgName: String = "") {
         var totalSize = 0
 
-        for (file in files)
+        for (file in getFiles(packageName, versionCode, sharedLibPkgName))
             totalSize += file.length().toInt()
 
         val result: Shell.Result =
@@ -100,14 +92,17 @@ class RootInstaller(context: Context) : InstallerBase(context) {
         if (found) {
             val sessionId = sessionIdMatcher.group(1)?.toInt()
             if (Shell.getShell().isRoot && sessionId != null) {
-                for (file in files) {
+                for (file in getFiles(packageName, versionCode, sharedLibPkgName)) {
                     Shell.cmd("cat \"${file.absoluteFile}\" | pm install-write -S ${file.length()} $sessionId \"${file.name}\"")
                         .exec()
                 }
 
                 val shellResult = Shell.cmd("pm install-commit $sessionId").exec()
 
-                if (!shellResult.isSuccess) {
+                if (shellResult.isSuccess) {
+                    // Installation is not yet finished if this is a shared library
+                    if (packageName == download?.packageName) onInstallationSuccess()
+                } else {
                     removeFromInstallQueue(packageName)
                     val event = InstallerEvent.Failed(
                         packageName,

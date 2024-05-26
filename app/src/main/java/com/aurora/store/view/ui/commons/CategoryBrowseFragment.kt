@@ -1,9 +1,28 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.commons
 
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.aurora.gplayapi.data.models.App
@@ -16,8 +35,9 @@ import com.aurora.store.view.custom.recycler.EndlessRecyclerOnScrollListener
 import com.aurora.store.view.epoxy.controller.CategoryCarouselController
 import com.aurora.store.view.epoxy.controller.GenericCarouselController
 import com.aurora.store.viewmodel.subcategory.SubCategoryClusterViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class CategoryBrowseFragment : BaseFragment(R.layout.activity_generic_recycler),
     GenericCarouselController.Callbacks {
 
@@ -26,18 +46,16 @@ class CategoryBrowseFragment : BaseFragment(R.layout.activity_generic_recycler),
         get() = _binding!!
 
     private val args: CategoryBrowseFragmentArgs by navArgs()
+    private val viewModel: SubCategoryClusterViewModel by viewModels()
 
-    lateinit var C: GenericCarouselController
-    lateinit var VM: SubCategoryClusterViewModel
-
-    lateinit var endlessRecyclerOnScrollListener: EndlessRecyclerOnScrollListener
+    private lateinit var genericCarouselController: GenericCarouselController
+    private lateinit var endlessRecyclerOnScrollListener: EndlessRecyclerOnScrollListener
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = ActivityGenericRecyclerBinding.bind(view)
-        C = CategoryCarouselController(this)
-        VM = ViewModelProvider(this)[SubCategoryClusterViewModel::class.java]
+        genericCarouselController = CategoryCarouselController(this)
 
         // Toolbar
         binding.layoutToolbarAction.apply {
@@ -46,9 +64,9 @@ class CategoryBrowseFragment : BaseFragment(R.layout.activity_generic_recycler),
         }
 
         // RecyclerView
-        binding.recycler.setController(C)
+        binding.recycler.setController(genericCarouselController)
 
-        VM.liveData.observe(viewLifecycleOwner) {
+        viewModel.liveData.observe(viewLifecycleOwner) {
             when (it) {
                 is ViewState.Empty -> {
                 }
@@ -69,17 +87,16 @@ class CategoryBrowseFragment : BaseFragment(R.layout.activity_generic_recycler),
             }
         }
 
-        endlessRecyclerOnScrollListener =
-            object : EndlessRecyclerOnScrollListener() {
-                override fun onLoadMore(currentPage: Int) {
-                    VM.observe()
-                }
+        endlessRecyclerOnScrollListener = object : EndlessRecyclerOnScrollListener() {
+            override fun onLoadMore(currentPage: Int) {
+                viewModel.observe()
             }
+        }
 
         endlessRecyclerOnScrollListener.disable()
         binding.recycler.addOnScrollListener(endlessRecyclerOnScrollListener)
 
-        VM.observeCategory(args.browseUrl)
+        viewModel.observeCategory(args.browseUrl)
         updateController(null)
     }
 
@@ -89,9 +106,8 @@ class CategoryBrowseFragment : BaseFragment(R.layout.activity_generic_recycler),
     }
 
     private fun updateController(streamBundle: StreamBundle?) {
-        if (streamBundle != null)
-            endlessRecyclerOnScrollListener.enable()
-        C.setData(streamBundle)
+        if (streamBundle != null) endlessRecyclerOnScrollListener.enable()
+        genericCarouselController.setData(streamBundle)
     }
 
     override fun onHeaderClicked(streamCluster: StreamCluster) {
@@ -107,11 +123,11 @@ class CategoryBrowseFragment : BaseFragment(R.layout.activity_generic_recycler),
     }
 
     override fun onClusterScrolled(streamCluster: StreamCluster) {
-        VM.observeCluster(streamCluster)
+        viewModel.observeCluster(streamCluster)
     }
 
     override fun onAppClick(app: App) {
-        openDetailsFragment(app)
+        openDetailsFragment(app.packageName, app)
     }
 
     override fun onAppLongClick(app: App) {

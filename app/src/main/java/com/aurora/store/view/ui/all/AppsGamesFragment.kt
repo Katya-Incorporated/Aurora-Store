@@ -1,3 +1,22 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.all
 
 import android.os.Bundle
@@ -8,25 +27,25 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.aurora.gplayapi.data.models.AuthData
 import com.aurora.store.R
 import com.aurora.store.data.providers.AuthProvider
 import com.aurora.store.databinding.ActivityGenericPagerBinding
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AppsGamesFragment : Fragment(R.layout.activity_generic_pager) {
 
     private var _binding: ActivityGenericPagerBinding? = null
     private val binding: ActivityGenericPagerBinding
         get() = _binding!!
 
-    private lateinit var authData: AuthData
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = ActivityGenericPagerBinding.bind(view)
-        authData = AuthProvider.with(view.context).getAuthData()
+
+        val authData = AuthProvider.with(view.context).getAuthData()
 
         // Toolbar
         binding.layoutActionToolbar.toolbar.apply {

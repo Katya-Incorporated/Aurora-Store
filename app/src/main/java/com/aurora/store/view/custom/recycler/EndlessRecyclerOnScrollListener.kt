@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,21 +48,12 @@ abstract class EndlessRecyclerOnScrollListener : RecyclerView.OnScrollListener {
 
     constructor()
 
-    constructor(layoutManager: RecyclerView.LayoutManager) {
-        this.layoutManager = layoutManager
-    }
-
     constructor(visibleThreshold: Int) {
         this.visibleThreshold = visibleThreshold
     }
 
-    constructor(layoutManager: RecyclerView.LayoutManager, visibleThreshold: Int) {
-        this.layoutManager = layoutManager
-        this.visibleThreshold = visibleThreshold
-    }
-
     private fun findFirstVisibleItemPosition(recyclerView: RecyclerView): Int {
-        val child = findOneVisibleChild(0, layoutManager.childCount, false, true)
+        val child = findOneVisibleChild(0, layoutManager.childCount, true, false)
         return if (child == null) RecyclerView.NO_POSITION else recyclerView.getChildAdapterPosition(
             child
         )

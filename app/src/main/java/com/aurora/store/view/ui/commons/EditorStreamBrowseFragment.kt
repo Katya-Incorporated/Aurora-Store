@@ -1,8 +1,27 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.commons
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.airbnb.epoxy.EpoxyModel
@@ -17,8 +36,9 @@ import com.aurora.store.view.epoxy.views.details.MiniScreenshotView
 import com.aurora.store.view.epoxy.views.details.MiniScreenshotViewModel_
 import com.aurora.store.view.epoxy.views.shimmer.AppListViewShimmerModel_
 import com.aurora.store.viewmodel.editorschoice.EditorBrowseViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class EditorStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycler) {
 
     private var _binding: ActivityGenericRecyclerBinding? = null
@@ -26,15 +46,12 @@ class EditorStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycl
         get() = _binding!!
 
     private val args: EditorStreamBrowseFragmentArgs by navArgs()
-
-    lateinit var VM: EditorBrowseViewModel
-    lateinit var title: String
+    private val viewModel: EditorBrowseViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = ActivityGenericRecyclerBinding.bind(view)
-        VM = ViewModelProvider(this)[EditorBrowseViewModel::class.java]
 
         // Toolbar
         binding.layoutToolbarAction.apply {
@@ -44,11 +61,11 @@ class EditorStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycl
             }
         }
 
-        VM.liveData.observe(viewLifecycleOwner) {
+        viewModel.liveData.observe(viewLifecycleOwner) {
             updateController(it)
         }
 
-        VM.getEditorStreamBundle(args.browseUrl)
+        viewModel.getEditorStreamBundle(args.browseUrl)
         updateController(null)
     }
 
@@ -89,7 +106,7 @@ class EditorStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycl
                         AppListViewModel_()
                             .id("app_${app.id}")
                             .app(app)
-                            .click { _ -> openDetailsFragment(app) }
+                            .click { _ -> openDetailsFragment(app.packageName, app) }
                     )
 
                     app.editorReason?.let { editorReason ->
@@ -101,7 +118,7 @@ class EditorStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycl
                                         .joinToString(transform = { "\n• $it" })
                                         .substringAfter(delimiter = "\n")
                                 )
-                                .click { _ -> openDetailsFragment(app) }
+                                .click { _ -> openDetailsFragment(app.packageName, app) }
                         )
                     }
 
@@ -119,7 +136,7 @@ class EditorStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycl
                                 EditorHeadViewModel_()
                                     .id("description_${app.id}")
                                     .title(editorReason.description)
-                                    .click { _ -> openDetailsFragment(app) }
+                                    .click { _ -> openDetailsFragment(app.packageName, app) }
                             )
                         }
                     }

@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,73 +20,90 @@
 package com.aurora.store.util
 
 import android.content.Context
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.util.Base64
+import android.util.Log
+import com.aurora.extensions.generateX509Certificate
+import com.aurora.extensions.getInstallerPackageNameCompat
 import com.aurora.extensions.isPAndAbove
 import com.aurora.store.util.PackageUtil.getPackageInfo
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.security.cert.CertificateFactory
+import java.security.MessageDigest
 import java.security.cert.X509Certificate
-import java.util.Locale
 
 object CertUtil {
-    private const val FDROID = "FDROID"
-    private const val GUARDIAN = "GUARDIANPROJECT.INFO"
 
-    private fun getX509Certificates(
-        context: Context,
-        packageName: String
-    ): List<X509Certificate> {
-        val certificates: MutableList<X509Certificate> = mutableListOf()
-
-        try {
-
-            val packageInfo = if (isPAndAbove()) {
-                getPackageInfo(context, packageName, PackageManager.GET_SIGNING_CERTIFICATES)
-            } else {
-                getPackageInfo(context, packageName, PackageManager.GET_SIGNATURES)
-            }
-
-            val certificateFactory = CertificateFactory.getInstance("X509")
-
-            if (isPAndAbove()) {
-                packageInfo.signingInfo.apkContentsSigners.forEach {
-                    val bytes = it.toByteArray()
-                    val inputStream: InputStream = ByteArrayInputStream(bytes)
-                    certificates.add(
-                        certificateFactory!!.generateCertificate(inputStream) as X509Certificate
-                    )
-                }
-            } else {
-                for (i in packageInfo.signatures.indices) {
-                    val bytes = packageInfo.signatures[i].toByteArray()
-                    val inStream: InputStream = ByteArrayInputStream(bytes)
-                    certificates.add(
-                        certificateFactory!!.generateCertificate(inStream) as X509Certificate
-                    )
-                }
-            }
-        } catch (e: Exception) {
-
-        }
-
-        return certificates
-    }
+    private val TAG = "CertUtil"
 
     fun isFDroidApp(context: Context, packageName: String): Boolean {
-        val certificates = getX509Certificates(context, packageName)
+        return isInstalledByFDroid(context, packageName) || isSignedByFDroid(context, packageName)
+    }
 
-        return if (certificates.isEmpty())
-            false
-        else {
-            val cert = certificates[0]
-
-            if (cert.subjectDN != null) {
-                val DN = cert.subjectDN.name.uppercase(Locale.getDefault())
-                DN.contains(FDROID) || DN.contains(GUARDIAN)
-            } else {
-                false
+    fun getEncodedCertificateHashes(context: Context, packageName: String): List<String> {
+        return try {
+            val certificates = getX509Certificates(context, packageName)
+            certificates.map {
+                val messageDigest = MessageDigest.getInstance("SHA")
+                messageDigest.update(it.encoded)
+                Base64.encodeToString(
+                    messageDigest.digest(),
+                    Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+                )
             }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to get SHA256 certificate hash", exception)
+            emptyList()
+        }
+    }
+
+    private fun isSignedByFDroid(context: Context, packageName: String): Boolean {
+        return try {
+            getX509Certificates(context, packageName).any { cert ->
+                cert.subjectDN.name.split(",").associate {
+                    val (left, right) = it.split("=")
+                    left to right
+                }["O"] == "fdroid.org"
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to check signing cert for $packageName")
+            false
+        }
+    }
+
+    private fun isInstalledByFDroid(context: Context, packageName: String): Boolean {
+        val fdroidPackages = listOf(
+            "org.fdroid.basic", "org.fdroid.fdroid", "org.fdroid.fdroid.privileged"
+        )
+        return fdroidPackages.contains(
+            context.packageManager.getInstallerPackageNameCompat(packageName)
+        )
+    }
+
+    private fun getX509Certificates(context: Context, packageName: String): List<X509Certificate> {
+        return try {
+            val packageInfo = getPackageInfoWithSignature(context, packageName)
+            if (isPAndAbove()) {
+                if (packageInfo.signingInfo.hasMultipleSigners()) {
+                    packageInfo.signingInfo.apkContentsSigners.map { it.generateX509Certificate() }
+                } else {
+                    packageInfo.signingInfo.signingCertificateHistory.map { it.generateX509Certificate() }
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.signatures.map { it.generateX509Certificate() }
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to get X509 certificates", exception)
+            emptyList()
+        }
+    }
+
+    private fun getPackageInfoWithSignature(context: Context, packageName: String): PackageInfo {
+        return if (isPAndAbove()) {
+            getPackageInfo(context, packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+        } else {
+            @Suppress("DEPRECATION")
+            getPackageInfo(context, packageName, PackageManager.GET_SIGNATURES)
         }
     }
 }

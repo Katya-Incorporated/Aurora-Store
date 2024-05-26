@@ -1,8 +1,27 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.view.ui.commons
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.airbnb.epoxy.EpoxyModel
@@ -17,8 +36,9 @@ import com.aurora.store.view.epoxy.views.details.MiniScreenshotView
 import com.aurora.store.view.epoxy.views.details.MiniScreenshotViewModel_
 import com.aurora.store.view.epoxy.views.shimmer.AppListViewShimmerModel_
 import com.aurora.store.viewmodel.browse.ExpandedStreamBrowseViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class ExpandedStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recycler) {
 
     private var _binding: ActivityGenericRecyclerBinding? = null
@@ -26,17 +46,14 @@ class ExpandedStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recy
         get() = _binding!!
 
     private val args: ExpandedStreamBrowseFragmentArgs by navArgs()
+    private val viewModel: ExpandedStreamBrowseViewModel by viewModels()
 
-    lateinit var VM: ExpandedStreamBrowseViewModel
-    lateinit var endlessRecyclerOnScrollListener: EndlessRecyclerOnScrollListener
-
-    lateinit var title: String
-    lateinit var cluster: StreamCluster
+    private lateinit var endlessRecyclerOnScrollListener: EndlessRecyclerOnScrollListener
+    private lateinit var cluster: StreamCluster
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = ActivityGenericRecyclerBinding.bind(view)
-        VM = ViewModelProvider(this)[ExpandedStreamBrowseViewModel::class.java]
 
         // Toolbar
         binding.layoutToolbarAction.apply {
@@ -46,7 +63,7 @@ class ExpandedStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recy
             }
         }
 
-        VM.liveData.observe(viewLifecycleOwner) {
+        viewModel.liveData.observe(viewLifecycleOwner) {
             if (!::cluster.isInitialized) attachRecycler()
             cluster = it
 
@@ -54,7 +71,7 @@ class ExpandedStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recy
             updateTitle(cluster)
         }
 
-        VM.getInitialCluster(args.expandedStreamUrl)
+        viewModel.getInitialCluster(args.expandedStreamUrl)
         updateController(null)
     }
 
@@ -71,7 +88,7 @@ class ExpandedStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recy
     private fun attachRecycler() {
         endlessRecyclerOnScrollListener = object : EndlessRecyclerOnScrollListener() {
             override fun onLoadMore(currentPage: Int) {
-                VM.next()
+                viewModel.next()
             }
         }
         binding.recycler.addOnScrollListener(endlessRecyclerOnScrollListener)
@@ -117,7 +134,7 @@ class ExpandedStreamBrowseFragment : BaseFragment(R.layout.activity_generic_recy
                         AppListViewModel_()
                             .id(it.packageName.hashCode())
                             .app(it)
-                            .click { _ -> openDetailsFragment(it) }
+                            .click { _ -> openDetailsFragment(it.packageName, it) }
                     )
                 }
 

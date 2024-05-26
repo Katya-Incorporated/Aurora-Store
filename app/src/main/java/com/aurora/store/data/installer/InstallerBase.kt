@@ -1,6 +1,6 @@
 /*
  * Aurora Store
- * Copyright (C) © A Dmitry Sorokin production. All rights reserved. Powered by Katya AI. 👽 Copyright © 2021-2023 Katya, Inc Katya ® is a registered trademark Sponsored by REChain. 🪐 hr@rechain.email p2p@rechain.email pr@rechain.email sorydima@rechain.email support@rechain.email sip@rechain.email Please allow anywhere from 1 to 5 business days for E-mail responses! 💌
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
  *
  *  Aurora Store is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,46 +20,48 @@
 package com.aurora.store.data.installer
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.core.content.FileProvider
-import com.aurora.store.AuroraApplication
+import com.aurora.store.AuroraApp
 import com.aurora.store.BuildConfig
 import com.aurora.store.data.event.InstallerEvent
+import com.aurora.store.data.room.download.Download
 import com.aurora.store.util.Log
+import com.aurora.store.util.PathUtil
+import com.aurora.store.util.Preferences
+import com.aurora.store.util.Preferences.PREFERENCE_AUTO_DELETE
 import org.greenrobot.eventbus.EventBus
 import java.io.File
 
 abstract class InstallerBase(protected var context: Context) : IInstaller {
 
+    var download: Download? = null
+        private set
+
+    override fun install(download: Download) {
+        this.download = download
+    }
+
     override fun clearQueue() {
-        AuroraApplication.enqueuedInstalls.clear()
+        AuroraApp.enqueuedInstalls.clear()
     }
 
     override fun isAlreadyQueued(packageName: String): Boolean {
-        return AuroraApplication.enqueuedInstalls.contains(packageName)
+        return AuroraApp.enqueuedInstalls.contains(packageName)
     }
 
     override fun removeFromInstallQueue(packageName: String) {
-        AuroraApplication.enqueuedInstalls.remove(packageName)
+        AuroraApp.enqueuedInstalls.remove(packageName)
     }
 
-    override fun uninstall(packageName: String) {
-        val uri = Uri.fromParts("package", packageName, null)
-        val intent = Intent().apply {
-            data = uri
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    open fun onInstallationSuccess() {
+        download?.let {
+            AppInstaller.notifyInstallation(context, it)
+            if (Preferences.getBoolean(context, PREFERENCE_AUTO_DELETE)) {
+                PathUtil.getAppDownloadDir(context, it.packageName, it.versionCode)
+                    .deleteRecursively()
+            }
         }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            intent.action = Intent.ACTION_DELETE
-        } else {
-            intent.action = Intent.ACTION_UNINSTALL_PACKAGE
-            intent.putExtra(Intent.EXTRA_RETURN_RESULT, true)
-        }
-
-        context.startActivity(intent)
     }
 
     open fun postError(packageName: String, error: String?, extra: String?) {
@@ -72,6 +74,15 @@ abstract class InstallerBase(protected var context: Context) : IInstaller {
         )
 
         EventBus.getDefault().post(event)
+    }
+
+    open fun getFiles(packageName: String, versionCode: Int, sharedLibPackageName: String = ""): List<File> {
+        val downloadDir = if (sharedLibPackageName.isNotBlank()) {
+            PathUtil.getLibDownloadDir(context, packageName, versionCode, sharedLibPackageName)
+        } else {
+            PathUtil.getAppDownloadDir(context, packageName, versionCode)
+        }
+        return downloadDir.listFiles()!!.filter { it.path.endsWith(".apk") }
     }
 
     open fun getUri(file: File): Uri {

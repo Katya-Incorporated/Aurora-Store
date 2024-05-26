@@ -93,8 +93,6 @@
     <string name="pref_ui_theme_dark">Tarî</string>
     <string name="pref_ui_theme_black">Reş</string>
     <string name="pref_ui_accent_title">Devok</string>
-    <string name="pref_install_profile_title">Profîlên sazkirinê (Ezmûnî)</string>
-    <string name="pref_install_profile_summary">Ji bo sazkirina sepanan profîla hedef hilbijêrin. Tenê bi rêbaza sazkirina root re dixebite</string>
     <string name="pref_install_mode_title">Rêbaza sazkirinê</string>
     <string name="pref_install_mode_summary">Modeya sazkirinê ya APK hilbijêrin</string>
     <string name="pref_install_mode_session">Sazkerê danişînê</string>
@@ -103,16 +101,10 @@
     <string name="pref_install_mode_native">Sazkerê xwemalî</string>
     <string name="pref_install_delete_title">APK-ê piştî sazkirinê jê bibe</string>
     <string name="pref_install_delete_summary">APK dê bi standard werin jêbirin</string>
-    <string name="pref_install_auto_title">Piştî dakêşanê APK-an jixweber saz bikin</string>
-    <string name="pref_install_auto_summary">Piştî ku daxistin xilas dibe sepan di cih de têne saz kirin</string>
     <string name="pref_filter_google_title">Sepanên Google-ê parzûn bikin</string>
     <string name="pref_filter_google_summary">Hemî Sepanên Google-ê ji encamên lêgerînê û sepanên kategoriyê radike</string>
     <string name="pref_filter_fdroid_title">Fîlterkirin sepanên F-Droid</string>
     <string name="pref_filter_fdroid_summary">Sepanên F-Droid-ê ji navnîşên sepanan radike</string>
-    <string name="pref_downloader_external_desc">Dê depoya derveyî ji bo dakêşandin, hinardekirin û hwd.</string>
-    <string name="pref_downloader_external">Depoya derveyî ya bikarhêner</string>
-    <string name="pref_downloader_active_title">Dakêşana çalak</string>
-    <string name="pref_downloader_active_summary">Hejmara herî zêde ya dakêşanên çalak</string>
     <string name="pref_dialog_to_apply_restart">Ev mîheng dê piştî ku hûn sepanê ji nû ve bidin dest pê kirin</string>
     <string name="pref_app_download">Dakêşandin</string>
     <string name="pref_abandon_session_desc">Danişînên sazkirinê yên dev jê berdidin an jî li bendê ne</string>
@@ -123,18 +115,10 @@
     <string name="onboarding_permission_esa_desc">Ji bo barkirina dakêşanan (APK &amp; OBBs), vesazkirin û vesazkirina amûrê li ser depoya derveyî.</string>
     <string name="onboarding_permission_esa">Gihîştina depoya derveyî</string>
     <string name="onboarding_welcome_select">Çawa ne\?</string>
-    <string name="onboarding_tos_error">Pêdivî ye ku hûn yekem TOS-ê wekî xwendî nîşan bikin.</string>
-    <string name="onboarding_tos_confirmation">Min Mercên Xizmeta Aurora Store-ê xwendiye.</string>
-    <string name="onboarding_tos_desc">Ji kerema xwe Mercên Xizmeta me bixwînin û qebûl bikin ku hûn Firotgeha Aurora bikar bînin.</string>
-    <string name="onboarding_tos">Mercên karûbar</string>
     <string name="onboarding_title_welcome">Bi xêr hatî</string>
-    <string name="onboarding_title_theme">Mijar</string>
     <string name="onboarding_title_permissions">Destûrên</string>
     <string name="onboarding_title_installer">Sazker</string>
-    <string name="onboarding_title_accent">Devok</string>
-    <string name="onboarding_theme_select">Ya ku hûn dixwazin hilbijêrin</string>
     <string name="onboarding_permission_select">Aurora Store destûrên jêrîn hewce dike</string>
-    <string name="onboarding_installer_select">Sazkirinek guncan hilbijêrin</string>
     <string name="notification_channel_general">Ragihandina giştî</string>
     <string name="notification_channel_alert">Agahdariya bilez</string>
     <string name="dialog_title_self_update">Nûvekirina nû heye</string>
@@ -181,7 +165,6 @@
     <string name="download_failed">Dakêşandin têk çû</string>
     <string name="download_eta_calculating">Hesabkirin</string>
     <string name="download_completed">Dakêşandî</string>
-    <string name="download_clear_completed">Paqijkirin qediya</string>
     <string name="download_canceled">Hat betalkirin</string>
     <string name="download_cancel_all">Hemî betal bikin</string>
     <string name="details_think_this_app">Hûn li ser vê sepanê çi difikirin\?</string>
@@ -207,7 +190,6 @@
     <string name="action_filter">Parzûnan</string>
     <string name="action_export">Îxrac</string>
     <string name="action_disable">Neçalak bike</string>
-    <string name="action_deny">Înkarkirin</string>
     <string name="action_copy_link">Lînk Kopî Bikin</string>
     <string name="action_copy">Kopî</string>
     <string name="action_close">Girtin</string>
@@ -216,7 +198,6 @@
     <string name="action_blacklist_add">Zêdekirin nav Lîsteya Reş</string>
     <string name="action_blacklist">Lîsteya reş</string>
     <string name="action_back">Paş</string>
-    <string name="action_accept">Baweranîn</string>
     <string name="account_logout">ji Aurora-yê derkeve</string>
     <string name="account_login_using">Bikaranîna têketinê</string>
     <string name="account_logged_out">Hûn derketin</string>
@@ -257,8 +238,6 @@
     <string name="toast_manual_unavailable">Koda guhertoya ku tu dixwazî tune ye.</string>
     <string name="title_manual_download">Bi destan daxe</string>
     <string name="insecure_anonymous_apply">Ji bo sepandina guhertinan zanibe be ku tu ji nû ve têketiye û sepanê ji nû ve daye destpêkirin.</string>
-    <string name="pref_updates_extended_desc">Kontrolkirina hildeman çalak bike bo sepanên neçalak</string>
-    <string name="pref_updates_extended">Hildemên firehkirî</string>
     <string name="pref_ui_similar_apps_desc">Komên wekhev û têkildar li ser rûpela hûrgiliyên sepanê nîşan bide</string>
     <string name="pref_ui_similar_apps">Sepanên wekhev û têkildar</string>
     <string name="pref_ui_no_for_you_desc">Rûpelên Bo Te li ser dîmendera malê rê bide</string>

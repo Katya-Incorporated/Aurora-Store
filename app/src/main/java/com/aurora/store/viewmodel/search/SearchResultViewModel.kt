@@ -1,34 +1,72 @@
+/*
+ * Aurora Store
+ *  Copyright (C) 2021, Rahul Kumar Patel <whyorean@gmail.com>
+ *
+ *  Aurora Store is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Aurora Store is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Aurora Store.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.aurora.store.viewmodel.search
 
-import android.app.Application
+import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aurora.extensions.flushAndAdd
 import com.aurora.gplayapi.data.models.AuthData
 import com.aurora.gplayapi.data.models.SearchBundle
 import com.aurora.gplayapi.helpers.SearchHelper
-import com.aurora.store.data.RequestState
+import com.aurora.gplayapi.helpers.WebSearchHelper
 import com.aurora.store.data.network.HttpClient
 import com.aurora.store.data.providers.AuthProvider
-import com.aurora.store.viewmodel.BaseAndroidViewModel
+import com.aurora.store.data.providers.FilterProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
-class SearchResultViewModel(application: Application) : BaseAndroidViewModel(application) {
+@HiltViewModel
+@SuppressLint("StaticFieldLeak") // false positive, see https://github.com/google/dagger/issues/3253
+class SearchResultViewModel @Inject constructor(
+    val filterProvider: FilterProvider,
+    @ApplicationContext private val context: Context
+) : ViewModel() {
 
     private val TAG = SearchResultViewModel::class.java.simpleName
     private val authData: AuthData = AuthProvider
-        .with(application)
+        .with(context)
         .getAuthData()
 
+    private val webSearchHelper: WebSearchHelper = WebSearchHelper(authData)
     private val searchHelper: SearchHelper = SearchHelper(authData)
-        .using(HttpClient.getPreferredClient())
+        .using(HttpClient.getPreferredClient(context))
 
     val liveData: MutableLiveData<SearchBundle> = MutableLiveData()
 
     private var searchBundle: SearchBundle = SearchBundle()
+
+    fun helper(): SearchHelper {
+        return if (authData.isAnonymous) {
+            webSearchHelper
+        } else {
+            searchHelper
+        }
+    }
 
     fun observeSearchResults(query: String) {
         //Clear old results
@@ -50,7 +88,7 @@ class SearchResultViewModel(application: Application) : BaseAndroidViewModel(app
     private fun search(
         query: String
     ): SearchBundle {
-        return searchHelper.searchResults(query)
+        return helper().searchResults(query)
     }
 
     @Synchronized
@@ -58,8 +96,8 @@ class SearchResultViewModel(application: Application) : BaseAndroidViewModel(app
         viewModelScope.launch(Dispatchers.IO) {
             supervisorScope {
                 try {
-                    if (nextSubBundleSet.isNotEmpty() && responseCode.value != 429) {
-                        val newSearchBundle = searchHelper.next(nextSubBundleSet)
+                    if (nextSubBundleSet.isNotEmpty()) {
+                        val newSearchBundle = helper().next(nextSubBundleSet)
                         if (newSearchBundle.appList.isNotEmpty()) {
                             searchBundle.apply {
                                 subBundles.flushAndAdd(newSearchBundle.subBundles)
@@ -70,13 +108,9 @@ class SearchResultViewModel(application: Application) : BaseAndroidViewModel(app
                         }
                     }
                 } catch (e: Exception) {
-                    Log.d(TAG, "Response code: ${responseCode.value}", e)
+                    Log.d(TAG, "Failed to get next bundle", e)
                 }
             }
         }
-    }
-
-    override fun observe() {
-        requestState = RequestState.Init
     }
 }

@@ -1,0 +1,7 @@
+• Cel: Android 14
+• Ulepszono filtr pakietów F-Droid dla aktualizacji
+• Zastrzeżenie odpowiedzialności za przyszłe aktualizacje podczas instalowania aplikacji za pomocą SessionInstaller (Android 14+)
+• Zmieniono nazwę "Rozszerzone aktualizacje" na "Niekompatybilne aktualizacje"
+• Dodanie opcji menu umożliwiającej utworzenie skrótu do zainstalowanej aplikacji
+• Poprawki błędów i ulepszenia
+• Aktualizacje tłumaczeń
